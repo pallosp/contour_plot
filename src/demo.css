@@ -1,0 +1,59 @@
+body {
+  margin: 8px 16px;
+}
+
+svg {
+  border: 1px solid grey;
+  box-sizing: border-box;
+  height: calc(100vh - 104px);
+  width: 100%;
+}
+
+button,
+label {
+  margin-right: 0.5em;
+}
+
+#pixel-size {
+  width: 2em;
+}
+
+.function {
+  margin-left: 1em;
+}
+
+.inside {
+  stroke: steelblue;
+}
+
+.perimeter {
+  stroke: mediumblue;
+}
+
+.outside {
+  stroke: lightgrey;
+}
+
+.c1 {
+  stroke: #000;
+}
+
+.c2 {
+  stroke: #333;
+}
+
+.c3 {
+  stroke: #666;
+}
+
+.c4 {
+  stroke: #999;
+}
+
+.c5 {
+  stroke: #BBB;
+}
+
+.c6 {
+  stroke: #FFF;
+}
