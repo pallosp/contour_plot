@@ -1,3 +1,5 @@
+import assert from 'minimalistic-assert';
+
 import {Rect, Run, Square} from './types';
 
 interface Node<T> extends Square<T> {
@@ -36,9 +38,8 @@ export class Quadtree<T> {
       readonly sampleDistance: number,
       readonly pixelSize: number,
   ) {
-    // TODO: Add assert to the dependencies
-    // assert(Number.isInteger(Math.log2(sampleDistance)));
-    // assert(Number.isInteger(Math.log2(pixelSize)));
+    assert(Number.isInteger(Math.log2(sampleDistance)));
+    assert(Number.isInteger(Math.log2(pixelSize)));
     const squareSize = sampleDistance;
     const right = viewport.x + viewport.width;
     const bottom = viewport.y + viewport.height;
