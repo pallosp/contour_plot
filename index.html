@@ -8,24 +8,23 @@
 </head>
 
 <body>
-  <p>
-    <button id="random-lines">Lines</button>
-    <button id="random-circles">Circles</button>
-    <button id="mandelbrot-set">Mandelbrot set</button>
-    <label><input id="show-edges" type="checkbox">Edges</label>
-    <label><input id="use-runs" type="checkbox">Squares→Runs</label>
-    <label>Pixel size: 2^<input id="pixel-size" type="number" value="-1" min="-2" max="9"></label>
-    <span class="function"></span>
-  </p>
-  <p>
-    <span class="time"></span>
-  </p>
-  <p>
-    <svg>
-      <g id="root" style="transform: translate(50%, 50%) scale(64)">
-        <g id="chart" />
-      </g>
-    </svg>
-  </p>
+  <div>
+    <p>
+      <button id="random-lines">Lines</button>
+      <button id="random-circles">Circles</button>
+      <button id="mandelbrot-set">Mandelbrot set</button>
+      <label><input id="show-edges" type="checkbox">Edges</label>
+      <label><input id="use-runs" type="checkbox">Squares→Runs</label>
+      <label>Pixel size: 2^<input id="pixel-size" type="number" value="-1" min="-2" max="9"></label>
+      <span id="function"></span>
+    <p>
+      <span class="time"></span>
+  </div>
+
+  <svg>
+    <g id="chart">
+    </g>
+  </svg>
+
   <script type="module" src="src/demo.ts"></script>
 </body>

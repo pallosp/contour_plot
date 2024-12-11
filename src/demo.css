@@ -1,11 +1,15 @@
 body {
-  margin: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0 16px;
 }
 
 svg {
   border: 1px solid grey;
   box-sizing: border-box;
-  height: calc(100vh - 104px);
+  flex-grow: 1;
+  margin-bottom: 16px;
   width: 100%;
 }
 
@@ -16,10 +20,6 @@ label {
 
 #pixel-size {
   width: 2em;
-}
-
-.function {
-  margin-left: 1em;
 }
 
 .inside {

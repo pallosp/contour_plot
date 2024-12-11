@@ -24,7 +24,7 @@ function plotRandomLines() {
   for (let i = 0; i < 10; i++) {
     lines.push([random(-5, 5), random(-5, 5), random(-25, 25)]);
   }
-  document.querySelector('.function')!.textContent = '10 lines';
+  document.querySelector('#function')!.textContent = '10 lines';
   plotFunction(
       (x, y) =>
           lines.some(
@@ -44,7 +44,7 @@ function plotRandomCircles() {
   for (let i = 0; i < 10; i++) {
     circles.push([random(-10, 10), random(-6, 6), random(0.5, 4)]);
   }
-  document.querySelector('.function')!.textContent = '10 circles';
+  document.querySelector('#function')!.textContent = '10 circles';
   plotFunction(
       (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1) + 1,
       /* sampleDistance= */ 1 / 4, ['outside', 'perimeter', 'inside'], 64);
@@ -61,7 +61,7 @@ function mandelbrot(x: number, y: number): number {
 }
 
 function plotMandelbrot() {
-  document.querySelector('.function')!.textContent = 'Mandelbrot set';
+  document.querySelector('#function')!.textContent = 'Mandelbrot set';
   plotFunction(
       mandelbrot, /* sampleDistance= */ 1 / 4,
       ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 256);
@@ -77,7 +77,7 @@ function plotFunction(
   const showEdges = document.getElementById('show-edges') as HTMLInputElement;
   const useRuns = document.getElementById('use-runs') as HTMLInputElement;
   const svg = document.querySelector('svg')!;
-  svg.querySelector<SVGElement>('#root')!.style.transform =
+  svg.querySelector<SVGElement>('#chart')!.style.transform =
       `translate(50%, 50%) scale(${zoom})`;
   const viewport = {
     x: -svg.clientWidth / zoom / 2,
@@ -109,7 +109,7 @@ function plotFunction(
   chart.textContent = '';
   chart.append(...pathElements);
 
-  const svgSize = document.getElementById('chart')!.innerHTML.length;
+  const svgSize = chart.innerHTML.length;
   document.querySelector('.time')!.textContent =
       `Computed ${plot.length} nodes in ${startDraw - startCompute} ms, ` +
       `and rendered them in ${Date.now() - startDraw} ms. ` +
