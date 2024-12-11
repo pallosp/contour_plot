@@ -67,6 +67,13 @@ function plotMandelbrot() {
       ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 256);
 }
 
+function plotSinCos() {
+  document.querySelector('#function')!.textContent = 'sin x + cos y';
+  plotFunction(
+      (x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5) + 3,
+      /* sampleDistance= */ 1 / 4, ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 64);
+}
+
 function plotFunction(
     func: (x: number, y: number) => number,
     sampleDistance: number,
@@ -124,6 +131,7 @@ function main() {
   document.getElementById('random-lines')!.onclick = plotRandomLines;
   document.getElementById('random-circles')!.onclick = plotRandomCircles;
   document.getElementById('mandelbrot-set')!.onclick = plotMandelbrot;
+  document.getElementById('sin-cos')!.onclick = plotSinCos;
   document.getElementById('show-edges')!.onclick = updatePlot;
   document.getElementById('use-runs')!.onclick = updatePlot;
   document.getElementById('pixel-size')!.onchange = updatePlot;
