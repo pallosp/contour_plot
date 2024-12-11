@@ -97,3 +97,14 @@ test('sampling too sparse', () => {
     expect.objectContaining({x: 3, y: 3, size: 2, value: false}),
   ]);
 });
+
+test('resolves isolated points even with low sampling rate', () => {
+  const viewport: Rect = {x: 0, y: 0, width: 13, height: 13};
+  function circle(x: number, y: number) {
+    return Math.sign(5 * 5 - (x - 6.5) ** 2 - (y - 6.5) ** 2);
+  }
+  const tree: Quadtree<number> = new Quadtree(circle, viewport, 8, 1);
+  // The circle perimeter contains 12 grid points:
+  //   center + ((±5, 0) ∨ (0, ±5) ∨ (±3, ±4) ∨ (±4, ±3))
+  expect(tree.leaves().filter(l => l.value === 0).length).toEqual(12);
+});
