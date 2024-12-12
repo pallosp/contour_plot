@@ -157,7 +157,7 @@ export class Quadtree<T> {
     if (node.leaf) {
       return node.value;
     }
-    const {x, y, size, value} = node;
+    const {x, y, size} = node;
     const childRadius = size / 4;
     const {coeffX, coeffY, nodes} = this;
     const key = coeffX * x + coeffY * y;
@@ -165,11 +165,11 @@ export class Quadtree<T> {
     const child2 = nodes.get(key + childRadius * (coeffX - coeffY))!;
     const child3 = nodes.get(key - childRadius * (coeffX + coeffY))!;
     const child4 = nodes.get(key - childRadius * (coeffX - coeffY))!;
-    let uniform = value === this.compressSubtree(child1);
-    uniform = value === this.compressSubtree(child2) && uniform;
-    uniform = value === this.compressSubtree(child3) && uniform;
-    uniform = value === this.compressSubtree(child4) && uniform;
-    if (!uniform) {
+    const v1 = this.compressSubtree(child1);
+    const v2 = this.compressSubtree(child2);
+    const v3 = this.compressSubtree(child3);
+    const v4 = this.compressSubtree(child4);
+    if (v1 === NON_UNIFORM || v1 !== v2 || v1 !== v3 || v1 !== v4) {
       return NON_UNIFORM;
     }
     child1.leaf = false;
@@ -177,7 +177,8 @@ export class Quadtree<T> {
     child3.leaf = false;
     child4.leaf = false;
     node.leaf = true;
-    return value;
+    node.value = v1 as T;
+    return v1;
   }
 
   /**

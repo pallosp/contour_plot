@@ -120,3 +120,14 @@ test('tolerates when sample distance < pixel size', () => {
     expect.objectContaining({x: 1.5, y: 1.5, size: 1, value: true}),
   ]);
 });
+
+test('point may disappear during refining', () => {
+  const viewport: Rect = {x: 0, y: 0, width: 4, height: 2};
+  const tree = new Quadtree((x, y) => x === 1 && y === 1, viewport, 2, 1);
+  tree.compress();
+  const squares = tree.leaves();
+  expect(squares).toEqual([
+    expect.objectContaining({x: 1, y: 1, size: 2, value: false}),
+    expect.objectContaining({x: 3, y: 1, size: 2, value: false}),
+  ]);
+});
