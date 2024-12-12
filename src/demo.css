@@ -13,9 +13,18 @@ svg {
   width: 100%;
 }
 
+p {
+  margin: 10px 0 16px 0;
+}
+
 button,
-label {
-  margin-right: 0.5em;
+label,
+#function {
+  display: inline-block;
+  line-height: 18px;
+  margin: 6px 0.5em 0 0;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 #pixel-size {
