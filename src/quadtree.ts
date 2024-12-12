@@ -227,8 +227,8 @@ export class Quadtree<T> {
     const bottom = viewport.y + viewport.height;
     const xMin = (Math.floor(viewport.x / pixelSize) + 0.5) * pixelSize;
     const yMin = (Math.floor(viewport.y / pixelSize) + 0.5) * pixelSize;
-    const xMax = (Math.ceil(right / pixelSize) + 0.5) * pixelSize;
-    const yMax = (Math.ceil(bottom / pixelSize) + 0.5) * pixelSize;
+    const xMax = (Math.ceil(right / pixelSize) - 0.5) * pixelSize;
+    const yMax = (Math.ceil(bottom / pixelSize) - 0.5) * pixelSize;
     const runs: Array<Run<T>> = [];
     for (let y = yMin; y <= yMax; y += pixelSize) {
       let lastNode = this.leafAt(xMin, y);
