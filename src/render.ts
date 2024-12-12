@@ -167,8 +167,8 @@ function createBitmap<T>(width: number, height: number): Array<Array<T>> {
 
 /**
  * Renders `squares` as a bitmap (2d array) in the given order. They must be
- * aligned to the grid, otherwise the result is unspecified. In case `zoom` is
- * set, magnifies both the squares and the viewport.
+ * aligned to the grid. In case `zoom` is set, magnifies both the squares and
+ * the viewport.
  */
 export function squaresToBitmap<T>(
     squares: Array<Square<T>>, viewport: Rect, zoom = 1): Array<Array<T>> {
@@ -181,6 +181,25 @@ export function squaresToBitmap<T>(
     const yStop = Math.min(y + size / 2, viewport.height * zoom);
     for (let i = yStart; i < yStop; i++) {
       bitmap[i].fill(value, Math.max(x - size / 2, 0), x + size / 2);
+    }
+  }
+  return bitmap;
+}
+
+/**
+ * Renders `runs` as a bitmap (2d array) in the given order. Their height must
+ * be 1 pixel, and they must be aligned to the grid.
+ */
+export function runsToBitmap<T>(
+    runs: Array<Run<T>>, viewport: Rect): Array<Array<T>> {
+  const bitmap = createBitmap<T>(viewport.width, viewport.height);
+  const top = viewport.y + 0.5;
+  const bottom = viewport.y + viewport.height - 0.5;
+  for (const {xMin, xMax, y, value} of runs) {
+    if (y >= top && y <= bottom) {
+      const start = xMin - 0.5 - viewport.x;
+      const stop = xMax + 0.5 - viewport.x;
+      bitmap[y - top].fill(value, Math.max(start, 0), stop);
     }
   }
   return bitmap;
