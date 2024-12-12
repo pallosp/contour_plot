@@ -1,4 +1,4 @@
-import {Run, Square} from './types';
+import {Rect, Run, Square} from './types';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
@@ -155,4 +155,33 @@ function runsToSvgPath<T>(runs: Array<Run<T>>, zoom: number): string {
   }
   d[0] = 'M' + d[0].substring(1);
   return d.join('');
+}
+
+function createBitmap<T>(width: number, height: number): Array<Array<T>> {
+  const bitmap = new Array(height);
+  for (let i = 0; i < height; i++) {
+    bitmap[i] = new Array(width);
+  }
+  return bitmap;
+}
+
+/**
+ * Renders `squares` as a bitmap (2d array) in the given order. They must be
+ * aligned to the grid, otherwise the result is unspecified. In case `zoom` is
+ * set, magnifies both the squares and the viewport.
+ */
+export function squaresToBitmap<T>(
+    squares: Array<Square<T>>, viewport: Rect, zoom = 1): Array<Array<T>> {
+  const bitmap = createBitmap<T>(viewport.width * zoom, viewport.height * zoom);
+  for (let {x, y, size, value} of squares) {
+    size *= zoom;
+    x = (x - viewport.x) * zoom;
+    y = (y - viewport.y) * zoom;
+    const yStart = Math.max(y - size / 2, 0);
+    const yStop = Math.min(y + size / 2, viewport.height * zoom);
+    for (let i = yStart; i < yStop; i++) {
+      bitmap[i].fill(value, Math.max(x - size / 2, 0), x + size / 2);
+    }
+  }
+  return bitmap;
 }
