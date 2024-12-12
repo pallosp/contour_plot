@@ -183,7 +183,8 @@ export class Quadtree<T> {
 
   /**
    * Traverses the tree. Merges its subtrees in which all nodes have the same
-   * value into a single node.
+   * value into a single node. Doesn't prune the excess nodes, so this.size()
+   * stays the same.
    */
   compress() {
     for (const node of this.nodes.values()) {
@@ -203,6 +204,14 @@ export class Quadtree<T> {
       }
     }
     return leaves;
+  }
+
+  /**
+   * Number of nodes in the tree. It's equal to the number of evaluations of the
+   * plotted function.
+   */
+  size(): number {
+    return this.nodes.size;
   }
 
   private leafAt(x: number, y: number): Node<T> {

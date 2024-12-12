@@ -1,4 +1,4 @@
-import {evalDiscrete2dFunction, evalDiscrete2dFunctionAsRuns} from './eval';
+import {Quadtree} from './quadtree';
 import {runsToPathElements, squaresToPathElements} from './render';
 import {Run, Square} from './types';
 
@@ -96,16 +96,25 @@ function plotFunction(
       document.querySelector<HTMLInputElement>('#pixel-size')!;
   const pixelSize = 2 ** +pixelSizeInput.value / zoom;
   sampleDistance = Math.max(sampleDistance, pixelSize);
+
   const startCompute = Date.now();
-  const plot = useRuns.checked ?
-      evalDiscrete2dFunctionAsRuns(func, viewport, sampleDistance, pixelSize) :
-      evalDiscrete2dFunction(func, viewport, sampleDistance, pixelSize);
+  const tree = new Quadtree(func, viewport, sampleDistance, pixelSize);
+
+  const startPostprocess = Date.now();
+  let runs: Array<Run<number>> = [];
+  let squares: Array<Square<number>> = [];
+  if (useRuns.checked) {
+    runs = tree.runs();
+  } else {
+    tree.compress();
+    squares = tree.leaves();
+  }
 
   const startDraw = Date.now();
   const valueToClass = (value: number) => classes[value];
   const pathElements = useRuns.checked ?
-      runsToPathElements(plot as Array<Run<number>>, valueToClass) :
-      squaresToPathElements(plot as Array<Square<number>>, valueToClass);
+      runsToPathElements(runs, valueToClass) :
+      squaresToPathElements(squares, valueToClass);
   if (showEdges.checked) {
     for (const path of pathElements) {
       path.setAttribute('stroke-width', '0.9px');
@@ -116,11 +125,20 @@ function plotFunction(
   chart.textContent = '';
   chart.append(...pathElements);
 
-  const svgSize = chart.innerHTML.length;
+  const computeTime = startPostprocess - startCompute;
+  const postprocessTime = startDraw - startPostprocess;
+  const renderTime = Date.now() - startDraw;
+  const evalCount = tree.size();
+  const rectCount = squares.length + runs.length;
+  const pixelCount = viewport.width * viewport.height / pixelSize ** 2;
+  const pixelPerEval = Math.round(pixelCount * 10 / evalCount) / 10;
+  const svgSize = Math.round(chart.innerHTML.length / 1024);
   document.querySelector('.time')!.textContent =
-      `Computed ${plot.length} nodes in ${startDraw - startCompute} ms, ` +
-      `and rendered them in ${Date.now() - startDraw} ms. ` +
-      `SVG size: ${svgSize} bytes`;
+      `Computed f(x,y) ${evalCount} times, once for every ${
+          pixelPerEval} pixels in ${computeTime} ms. ` +
+      `Built ${rectCount} rectangles in
+      ${postprocessTime} ms and rendered them in ${renderTime} ms. ` +
+      `SVG size: ${svgSize} KiB`;
 }
 
 function updatePlot() {
