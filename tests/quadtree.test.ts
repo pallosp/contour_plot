@@ -131,3 +131,24 @@ test('point may disappear during refining', () => {
     expect.objectContaining({x: 3, y: 1, size: 2, value: false}),
   ]);
 });
+
+test('runs from same size leaves', () => {
+  const viewport: Rect = {x: 0, y: 0, width: 4, height: 2};
+  const tree = new Quadtree((x, y) => x > 1 && x < 3 && y < 1, viewport, 1, 1);
+  expect(tree.runs()).toEqual([
+    {xMin: 0.5, xMax: 0.5, y: 0.5, value: false},
+    {xMin: 1.5, xMax: 2.5, y: 0.5, value: true},
+    {xMin: 3.5, xMax: 3.5, y: 0.5, value: false},
+    {xMin: 0.5, xMax: 3.5, y: 1.5, value: false},
+  ]);
+});
+
+test('runs from different size leaves', () => {
+  const viewport: Rect = {x: 0, y: 0, width: 4, height: 2};
+  const tree = new Quadtree((x, y) => x > 0 && x < 2 && y <= 1, viewport, 2, 1);
+  expect(tree.runs()).toEqual([
+    {xMin: 0.5, xMax: 1.5, y: 0.5, value: true},
+    {xMin: 2.5, xMax: 3.5, y: 0.5, value: false},
+    {xMin: 0.5, xMax: 3.5, y: 1.5, value: false},
+  ]);
+});
