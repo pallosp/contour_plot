@@ -40,7 +40,7 @@ export class Quadtree<T> {
   ) {
     assert(Number.isInteger(Math.log2(sampleDistance)));
     assert(Number.isInteger(Math.log2(pixelSize)));
-    const squareSize = sampleDistance;
+    const squareSize = Math.max(pixelSize, sampleDistance);
     const right = viewport.x + viewport.width;
     const bottom = viewport.y + viewport.height;
     const xStart = (Math.floor(viewport.x / squareSize) + 0.5) * squareSize;

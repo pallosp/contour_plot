@@ -108,3 +108,15 @@ test('resolves isolated points even with low sampling rate', () => {
   //   center + ((±5, 0) ∨ (0, ±5) ∨ (±3, ±4) ∨ (±4, ±3))
   expect(tree.leaves().filter(l => l.value === 0).length).toEqual(12);
 });
+
+test('tolerates when sample distance < pixel size', () => {
+  const viewport: Rect = {x: 0, y: 0, width: 2, height: 2};
+  const squares: Square<boolean>[] =
+      new Quadtree((x, y) => x === y, viewport, 0.5, 1).leaves();
+  expect(squares).toEqual([
+    expect.objectContaining({x: 0.5, y: 0.5, size: 1, value: true}),
+    expect.objectContaining({x: 1.5, y: 0.5, size: 1, value: false}),
+    expect.objectContaining({x: 0.5, y: 1.5, size: 1, value: false}),
+    expect.objectContaining({x: 1.5, y: 1.5, size: 1, value: true}),
+  ]);
+});
