@@ -1,4 +1,5 @@
 set -o errexit
 
 npx tsc
+npm run lint
 npm test

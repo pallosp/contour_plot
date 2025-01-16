@@ -1,7 +1,7 @@
 import {Quadtree} from '../src/quadtree';
 import {Rect, Square} from '../src/types';
 
-function compareLeaves(a: Square<any>, b: Square<any>): number {
+function compareLeaves<T>(a: Square<T>, b: Square<T>): number {
   return (a.y - b.y) || (a.x - b.x);
 }
 

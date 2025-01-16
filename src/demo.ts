@@ -35,7 +35,7 @@ function plotRandomLines() {
 }
 
 function circleAt([cx, cy, r]: [number, number, number], x: number, y: number) {
-  let d = Math.sqrt((cx - x) ** 2 + (cy - y) ** 2);
+  const d = Math.sqrt((cx - x) ** 2 + (cy - y) ** 2);
   return d < r - 0.02 ? 1 : d > r + 0.02 ? -1 : 0;
 }
 
