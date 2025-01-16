@@ -24,7 +24,6 @@ function plotRandomLines() {
   for (let i = 0; i < 10; i++) {
     lines.push([random(-5, 5), random(-5, 5), random(-25, 25)]);
   }
-  document.querySelector('#function')!.textContent = '10 lines';
   plotFunction(
       (x, y) =>
           lines.some(
@@ -44,7 +43,6 @@ function plotRandomCircles() {
   for (let i = 0; i < 10; i++) {
     circles.push([random(-10, 10), random(-6, 6), random(0.5, 4)]);
   }
-  document.querySelector('#function')!.textContent = '10 circles';
   plotFunction(
       (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1) + 1,
       /* sampleDistance= */ 1 / 4, ['outside', 'perimeter', 'inside'], 64);
@@ -61,14 +59,12 @@ function mandelbrot(x: number, y: number): number {
 }
 
 function plotMandelbrot() {
-  document.querySelector('#function')!.textContent = 'Mandelbrot set';
   plotFunction(
       mandelbrot, /* sampleDistance= */ 1 / 4,
       ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 256);
 }
 
 function plotSinCos() {
-  document.querySelector('#function')!.textContent = 'sin x + cos y';
   plotFunction(
       (x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5) + 3,
       /* sampleDistance= */ 1 / 4, ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 64);
