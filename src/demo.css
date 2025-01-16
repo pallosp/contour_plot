@@ -31,15 +31,15 @@ label,
 }
 
 .inside {
-  stroke: steelblue;
+  stroke: LightBlue;
 }
 
 .perimeter {
-  stroke: mediumblue;
+  stroke: royalblue;
 }
 
 .outside {
-  stroke: lightgrey;
+  stroke: #F0F0F0;
 }
 
 .c1 {
