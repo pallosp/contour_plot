@@ -6,7 +6,7 @@
 
 ## Demo
 
-To start a demo, run `npm run preview`, then open http://localhost:4173  
-There you can select a function to plot, specify the resolution, and optially enable displaying the edges of the building blocks.
+To run a demo, build it with `npm run build`, start a web server with `npm run preview`, then open http://localhost:4173  
+There you can select a function to plot, specify the resolution, and optionally highlight the edges of the building blocks.
 
 <img src="screenshot.png" alt="demo screenshot" style="width:541px;"/>
