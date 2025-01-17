@@ -89,27 +89,23 @@ export class Quadtree<T> {
     const childSize = size / 2;
     const childRadius = size / 4;
     node.leaf = false;
-    this.addLeaf(x - childRadius, y - childRadius, childSize);
-    this.addLeaf(x + childRadius, y - childRadius, childSize);
-    this.addLeaf(x - childRadius, y + childRadius, childSize);
-    this.addLeaf(x + childRadius, y + childRadius, childSize);
 
     const parentSize = size * 2;
     const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
     const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
     const parentKey = this.coeffX * parentX + this.coeffY * parentY;
-    const xNeighbor = this.nodes.get(
-        parentKey + 4 * (x - parentX) * this.coeffX,
-    );
-    const yNeighbor = this.nodes.get(
-        parentKey + 4 * (y - parentY) * this.coeffY,
-    );
-    if (xNeighbor?.leaf) {
-      this.subdivideLeaf(xNeighbor);
-    }
-    if (yNeighbor?.leaf) {
-      this.subdivideLeaf(yNeighbor);
-    }
+    const xNeighbor =
+        this.nodes.get(parentKey + 4 * (x - parentX) * this.coeffX);
+    const yNeighbor =
+        this.nodes.get(parentKey + 4 * (y - parentY) * this.coeffY);
+
+    if (xNeighbor?.leaf) this.subdivideLeaf(xNeighbor);
+    if (yNeighbor?.leaf) this.subdivideLeaf(yNeighbor);
+
+    this.addLeaf(x - childRadius, y - childRadius, childSize);
+    this.addLeaf(x + childRadius, y - childRadius, childSize);
+    this.addLeaf(x - childRadius, y + childRadius, childSize);
+    this.addLeaf(x + childRadius, y + childRadius, childSize);
   }
 
   /**
