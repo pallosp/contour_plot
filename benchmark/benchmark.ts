@@ -20,12 +20,13 @@ const viewport = {
 };
 
 const bench = new Bench({warmupIterations: 5});
+const tree = new Quadtree(mandelbrot, viewport, 1 / 4, 1 / 128);
 
-bench.add('squares', () => {
-  new Quadtree(mandelbrot, viewport, 1 / 4, 1 / 128).leaves();
+bench.add('build tree', () => {
+  new Quadtree(mandelbrot, viewport, 1 / 4, 1 / 128);
 });
-bench.add('runs', () => {
-  new Quadtree(mandelbrot, viewport, 1 / 4, 1 / 128).runs();
+bench.add('build runs', () => {
+  tree.runs();
 });
 
 await bench.run();
