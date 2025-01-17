@@ -263,7 +263,7 @@ export class Quadtree<T> {
         let node = nodes.get(coeffX * rightX + coeffY * rightY);
         if (!node) {
           const parentSize = lastNode.size * 2;
-          const parentX = (Math.floor(rightX / parentSize) + 0.5) * parentSize;
+          const parentX = rightX + parentSize / 4;
           const parentY = (Math.floor(rightY / parentSize) + 0.5) * parentSize;
           node = nodes.get(coeffX * parentX + coeffY * parentY)!;
         } else if (!node.leaf) {
