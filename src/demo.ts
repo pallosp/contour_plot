@@ -50,8 +50,8 @@ function plotRandomCircles() {
 
 function mandelbrot(x: number, y: number): number {
   let re = x, im = y, i = 0;
-  for (i = 0; re * re + im * im < 4 && i < 1000; i++) {
-    const t = re * re - im * im + x;
+  for (; re * re + im * im < 4 && i < 1000; i++) {
+    const t = (re + im) * (re - im) + x;
     im = 2 * re * im + y;
     re = t;
   }
