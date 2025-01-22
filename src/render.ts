@@ -138,7 +138,7 @@ function greatestPow2Divisor(x: number): number {
 }
 
 /**
- * Translates a list of runs to a string of SVG path commands.
+ * Translates a non-empty list of runs to an SVG path definition.
  * Multiplies all coordinates by `zoom`.
  */
 function runsToSvgPath<T>(runs: Array<Run<T>>, zoom: number): string {
