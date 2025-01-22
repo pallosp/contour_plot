@@ -179,13 +179,13 @@ export function squaresToBitmap<T>(
     squares: Array<Square<T>>, viewport: Rect, zoom = 1): Array<Array<T>> {
   const bitmap = createBitmap<T>(viewport.width * zoom, viewport.height * zoom);
   for (let {x, y, size, value} of squares) {
-    size *= zoom;
+    const r = size * zoom / 2;
     x = (x - viewport.x) * zoom;
     y = (y - viewport.y) * zoom;
-    const yStart = Math.max(y - size / 2, 0);
-    const yStop = Math.min(y + size / 2, viewport.height * zoom);
+    const yStart = Math.max(y - r, 0);
+    const yStop = Math.min(y + r, viewport.height * zoom);
     for (let i = yStart; i < yStop; i++) {
-      bitmap[i].fill(value, Math.max(x - size / 2, 0), x + size / 2);
+      bitmap[i].fill(value, Math.max(x - r, 0), x + r);
     }
   }
   return bitmap;
