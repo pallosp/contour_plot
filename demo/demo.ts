@@ -2,13 +2,19 @@ import {Quadtree} from '../src/quadtree';
 import {runsToPathElements, squaresToPathElements} from '../src/render';
 import {Run, Square} from '../src/types';
 
-type PlotConfig = [
+import {ViewportDragger} from './viewport_dragger';
+
+type PlotConfig = {
   func: (x: number, y: number) => number,
   sampleDistance: number,
   classes: string[],
   zoom: number,
-];
+};
 let lastPlotConfig: PlotConfig|undefined;
+
+const svg = document.querySelector('svg')!;
+const chart = svg.querySelector<SVGElement>('#chart')!;
+const vd = new ViewportDragger(svg, chart, 1);
 
 function random(min: number, max: number): number {
   return Math.random() * (max - min + 1) + min;
@@ -20,17 +26,22 @@ function linePointDistance(
 }
 
 function plotRandomLines() {
+  const zoom = 64;
+  vd.reset(zoom);
   const lines: Array<[number, number, number]> = [];
   for (let i = 0; i < 10; i++) {
     lines.push([random(-5, 5), random(-5, 5), random(-25, 25)]);
   }
-  plotFunction(
-      (x, y) =>
-          lines.some(
-              (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3)) ?
-          0 :
-          1,
-      /* sampleDistance= */ 1 / 4, ['perimeter', 'outside'], 64);
+  plotFunction({
+    func: (x, y) =>
+        lines.some(
+            (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3)) ?
+        0 :
+        1,
+    sampleDistance: 1 / 4,
+    classes: ['perimeter', 'outside'],
+    zoom,
+  });
 }
 
 function circleAt([cx, cy, r]: [number, number, number], x: number, y: number) {
@@ -39,13 +50,18 @@ function circleAt([cx, cy, r]: [number, number, number], x: number, y: number) {
 }
 
 function plotRandomCircles() {
+  const zoom = 64;
+  vd.reset(zoom);
   const circles: Array<[number, number, number]> = [];
   for (let i = 0; i < 10; i++) {
     circles.push([random(-10, 10), random(-6, 6), random(0.5, 4)]);
   }
-  plotFunction(
-      (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1) + 1,
-      /* sampleDistance= */ 1 / 4, ['outside', 'perimeter', 'inside'], 64);
+  plotFunction({
+    func: (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1) + 1,
+    sampleDistance: 1 / 4,
+    classes: ['outside', 'perimeter', 'inside'],
+    zoom,
+  });
 }
 
 function mandelbrot(x: number, y: number): number {
@@ -59,38 +75,40 @@ function mandelbrot(x: number, y: number): number {
 }
 
 function plotMandelbrot() {
-  plotFunction(
-      mandelbrot, /* sampleDistance= */ 1 / 4,
-      ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 256);
+  const zoom = 256;
+  vd.reset(zoom);
+  plotFunction({
+    func: mandelbrot,
+    sampleDistance: 1 / 4,
+    classes: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'],
+    zoom,
+  });
 }
 
 function plotSinCos() {
-  plotFunction(
-      (x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5) + 3,
-      /* sampleDistance= */ 1 / 4, ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 64);
+  const zoom = 64;
+  vd.reset(zoom);
+  plotFunction({
+    func: (x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5) + 3,
+    sampleDistance: 1 / 4,
+    classes: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'],
+    zoom,
+  });
 }
 
-function plotFunction(
-    func: (x: number, y: number) => number,
-    sampleDistance: number,
-    classes: string[],
-    zoom: number,
-) {
-  lastPlotConfig = [func, sampleDistance, classes, zoom];
+function roundDownToPow2(x: number): number {
+  return 2 ** Math.floor(Math.log2(x));
+}
+
+function plotFunction(plotConfig: PlotConfig) {
+  lastPlotConfig = plotConfig;
+  let {func, sampleDistance, classes} = plotConfig;
   const showEdges = document.getElementById('show-edges') as HTMLInputElement;
   const useRuns = document.getElementById('use-runs') as HTMLInputElement;
-  const svg = document.querySelector('svg')!;
-  svg.querySelector<SVGElement>('#chart')!.style.transform =
-      `translate(50%, 50%) scale(${zoom})`;
-  const viewport = {
-    x: -svg.clientWidth / zoom / 2,
-    y: -svg.clientHeight / zoom / 2,
-    width: svg.clientWidth / zoom,
-    height: svg.clientHeight / zoom
-  };
+  const viewport = vd.viewport();
   const pixelSizeInput =
       document.querySelector<HTMLInputElement>('#pixel-size')!;
-  const pixelSize = 2 ** +pixelSizeInput.value / zoom;
+  const pixelSize = 2 ** +pixelSizeInput.value / roundDownToPow2(vd.zoom);
   sampleDistance = Math.max(sampleDistance, pixelSize);
 
   const startCompute = Date.now();
@@ -138,7 +156,10 @@ function plotFunction(
 }
 
 function updatePlot() {
-  plotFunction(...lastPlotConfig!);
+  lastPlotConfig!.sampleDistance *=
+      roundDownToPow2(lastPlotConfig!.zoom) / roundDownToPow2(vd.zoom);
+  lastPlotConfig!.zoom = vd.zoom;
+  plotFunction(lastPlotConfig!);
 }
 
 function main() {
@@ -149,11 +170,8 @@ function main() {
   document.getElementById('show-edges')!.onclick = updatePlot;
   document.getElementById('use-runs')!.onclick = updatePlot;
   document.getElementById('pixel-size')!.onchange = updatePlot;
-  let updateTimer = 0;
-  window.onresize = () => {
-    clearTimeout(updateTimer);
-    updateTimer = window.setTimeout(updatePlot, 35);
-  };
+
+  vd.addEventListener('change', updatePlot);
   plotRandomLines();
 }
 
