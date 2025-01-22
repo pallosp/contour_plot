@@ -1,6 +1,6 @@
-import {Quadtree} from './quadtree';
-import {runsToPathElements, squaresToPathElements} from './render';
-import {Run, Square} from './types';
+import {Quadtree} from '../src/quadtree';
+import {runsToPathElements, squaresToPathElements} from '../src/render';
+import {Run, Square} from '../src/types';
 
 type PlotConfig = [
   func: (x: number, y: number) => number,
