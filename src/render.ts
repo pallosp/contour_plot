@@ -96,16 +96,7 @@ export function runsToPathElements<T>(
     runs: Array<Run<T>>,
     valueToClass: (value: T) => string | null,
     ): SVGPathElement[] {
-  let scale = 1;
-  let x = runs[0].xMin;
-  while (x % 1 === 0) {
-    x = x / 2;
-    scale *= 2;
-  }
-  while (x % 0.5 !== 0) {
-    x = x * 2;
-    scale /= 2;
-  }
+  const scale = greatestPow2Divisor(runs[0].xMin);
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
     const sameValueRuns = runsByValue.get(run.value);
@@ -130,6 +121,20 @@ export function runsToPathElements<T>(
     pathElements.push(path);
   }
   return pathElements;
+}
+
+/** Returns the greatest 2ⁿ (n ∈ ℤ) for which x / 2ⁿ is an integer. */
+function greatestPow2Divisor(x: number): number {
+  let divisor = 1;
+  while (x % 1 === 0) {
+    x = x / 2;
+    divisor *= 2;
+  }
+  while (x % 0.5 !== 0) {
+    x = x * 2;
+    divisor /= 2;
+  }
+  return divisor;
 }
 
 /**
