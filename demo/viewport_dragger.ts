@@ -29,6 +29,7 @@ export class ViewportDragger extends EventTarget {
 
   private mouseDown(e: MouseEvent) {
     if (e.button !== 0) return;
+    e.preventDefault();  // Don't select nearby text while panning.
     this.dragging = true;
     this.mouseEl.addEventListener('mousemove', this.mouseMoveListener);
     window.addEventListener('mouseup', this.mouseUpListener);
