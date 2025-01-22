@@ -85,7 +85,9 @@ export class ViewportDragger extends EventTarget {
   }
 
   private dispatchChange() {
-    if (this.throttleTimer) return;
+    if (this.throttleTimer) {
+      window.clearTimeout(this.throttleTimer);
+    }
     this.throttleTimer = window.setTimeout(() => {
       this.throttleTimer = 0;
       this.dispatchEvent(new Event('change'));
