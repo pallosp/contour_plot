@@ -4,13 +4,13 @@ import {Run, Square} from '../src/types';
 
 import {ViewportDragger} from './viewport_dragger';
 
-type PlotConfig = {
-  func: (x: number, y: number) => number,
+type Plot = {
+  tree: Quadtree<number>,
   sampleDistance: number,
   classes: string[],
   zoom: number,
 };
-let lastPlotConfig: PlotConfig|undefined;
+let lastPlot: Plot|undefined;
 
 const svg = document.querySelector('svg')!;
 const chart = svg.querySelector<SVGElement>('#chart')!;
@@ -33,11 +33,12 @@ function plotRandomLines() {
     lines.push([random(-5, 5), random(-5, 5), random(-25, 25)]);
   }
   plotFunction({
-    func: (x, y) =>
-        lines.some(
-            (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3)) ?
-        0 :
-        1,
+    tree: new Quadtree(
+        (x, y) =>
+            lines.some(
+                (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3)) ?
+            0 :
+            1),
     sampleDistance: 1 / 4,
     classes: ['perimeter', 'outside'],
     zoom,
@@ -57,7 +58,8 @@ function plotRandomCircles() {
     circles.push([random(-10, 10), random(-6, 6), random(0.5, 4)]);
   }
   plotFunction({
-    func: (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1) + 1,
+    tree: new Quadtree(
+        (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1) + 1),
     sampleDistance: 1 / 4,
     classes: ['outside', 'perimeter', 'inside'],
     zoom,
@@ -78,7 +80,7 @@ function plotMandelbrot() {
   const zoom = 256;
   vd.reset(zoom);
   plotFunction({
-    func: mandelbrot,
+    tree: new Quadtree(mandelbrot),
     sampleDistance: 1 / 4,
     classes: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'],
     zoom,
@@ -89,7 +91,8 @@ function plotSinCos() {
   const zoom = 64;
   vd.reset(zoom);
   plotFunction({
-    func: (x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5) + 3,
+    tree: new Quadtree(
+        (x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5) + 3),
     sampleDistance: 1 / 4,
     classes: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'],
     zoom,
@@ -100,9 +103,9 @@ function roundDownToPow2(x: number): number {
   return 2 ** Math.floor(Math.log2(x));
 }
 
-function plotFunction(plotConfig: PlotConfig) {
-  lastPlotConfig = plotConfig;
-  let {func, sampleDistance, classes} = plotConfig;
+function plotFunction(plot: Plot) {
+  lastPlot = plot;
+  let {tree, sampleDistance, classes} = plot;
   const showEdges = document.getElementById('show-edges') as HTMLInputElement;
   const useRuns = document.getElementById('use-runs') as HTMLInputElement;
   const viewport = vd.viewport();
@@ -112,7 +115,7 @@ function plotFunction(plotConfig: PlotConfig) {
   sampleDistance = Math.max(sampleDistance, pixelSize);
 
   const startCompute = Date.now();
-  const tree = new Quadtree(func, viewport, sampleDistance, pixelSize);
+  tree.compute(viewport, sampleDistance, pixelSize);
 
   const startPostprocess = Date.now();
   let runs: Array<Run<number>> = [];
@@ -156,10 +159,10 @@ function plotFunction(plotConfig: PlotConfig) {
 }
 
 function updatePlot() {
-  lastPlotConfig!.sampleDistance *=
-      roundDownToPow2(lastPlotConfig!.zoom) / roundDownToPow2(vd.zoom);
-  lastPlotConfig!.zoom = vd.zoom;
-  plotFunction(lastPlotConfig!);
+  lastPlot!.sampleDistance *=
+      roundDownToPow2(lastPlot!.zoom) / roundDownToPow2(vd.zoom);
+  lastPlot!.zoom = vd.zoom;
+  plotFunction(lastPlot!);
 }
 
 function main() {

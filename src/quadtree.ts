@@ -23,8 +23,12 @@ export class Quadtree<T> {
    * Powers of 2. x*coeffX+y*coeffY are unique integers for all possible
    * quadtree nodes in the viewport.
    */
-  private readonly coeffX: number;
-  private readonly coeffY: number;
+  private coeffX = 0;
+  private coeffY = 0;
+
+  private viewport: Rect = {x: 0, y: 0, width: 0, height: 0};
+  private sampleDistance = 0;
+  private pixelSize = 0;
 
   /**
    * LIFO queue of nodes for which the plotted function's value has been
@@ -32,14 +36,12 @@ export class Quadtree<T> {
    */
   private readonly queue: Array<Node<T>> = [];
 
-  constructor(
-      readonly func: (x: number, y: number) => T,
-      readonly viewport: Rect,
-      readonly sampleDistance: number,
-      readonly pixelSize: number,
-  ) {
+  constructor(readonly func: (x: number, y: number) => T) {};
+
+  public compute(viewport: Rect, sampleDistance: number, pixelSize: number) {
     assert(Number.isInteger(Math.log2(sampleDistance)));
     assert(Number.isInteger(Math.log2(pixelSize)));
+
     const squareSize = Math.max(pixelSize, sampleDistance);
     const right = viewport.x + viewport.width;
     const bottom = viewport.y + viewport.height;
@@ -47,23 +49,28 @@ export class Quadtree<T> {
     const yStart = (Math.floor(viewport.y / squareSize) + 0.5) * squareSize;
     const xStop = (Math.ceil(right / squareSize) + 0.5) * squareSize;
     const yStop = (Math.ceil(bottom / squareSize) + 0.5) * squareSize;
+
+    this.nodes.clear();
     this.coeffX = 2 / pixelSize;
     this.coeffY =
         (2 ** Math.ceil(Math.log2(xStop - xStart)) / pixelSize) * this.coeffX;
+
     for (let y = yStart; y < yStop; y += squareSize) {
       for (let x = xStart; x < xStop; x += squareSize) {
-        this.nodes.set(this.coeffX * x + this.coeffY * y, {
-          x,
-          y,
-          size: squareSize,
-          value: func(x, y),
-          leaf: true,
-        });
+        const key = this.coeffX * x + this.coeffY * y;
+        this.nodes.set(
+            key, {x, y, size: squareSize, value: this.func(x, y), leaf: true});
       }
     }
+
     if (pixelSize < sampleDistance) {
       this.queue.push(...this.nodes.values());
     }
+
+    this.viewport = {...viewport};
+    this.sampleDistance = sampleDistance;
+    this.pixelSize = pixelSize;
+
     let node: Node<T>|undefined;
     while ((node = this.queue.pop())) {
       if (node.leaf) {
