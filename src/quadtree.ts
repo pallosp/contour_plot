@@ -17,7 +17,7 @@ export class Quadtree<T> {
   /**
    * Quadtree nodes keyed by x*coeffX+y*coeffY.
    */
-  private readonly nodes = new Map<number, Node<T>>();
+  private nodes = new Map<number, Node<T>>();
 
   /**
    * Powers of 2. x*coeffX+y*coeffY are unique integers for all possible
@@ -50,7 +50,7 @@ export class Quadtree<T> {
     const xStop = (Math.ceil(right / squareSize) + 0.5) * squareSize;
     const yStop = (Math.ceil(bottom / squareSize) + 0.5) * squareSize;
 
-    this.nodes.clear();
+    this.nodes = new Map();
     this.coeffX = 2 / pixelSize;
     this.coeffY =
         (2 ** Math.ceil(Math.log2(xStop - xStart)) / pixelSize) * this.coeffX;
