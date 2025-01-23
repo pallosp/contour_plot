@@ -52,8 +52,7 @@ export class Quadtree<T> {
 
     this.nodes = new Map();
     this.coeffX = 2 / pixelSize;
-    this.coeffY =
-        (2 ** Math.ceil(Math.log2(xStop - xStart)) / pixelSize) * this.coeffX;
+    this.coeffY = (xStop - xStart) / pixelSize * this.coeffX;
 
     for (let y = yStart; y < yStop; y += squareSize) {
       for (let x = xStart; x < xStop; x += squareSize) {
