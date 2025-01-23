@@ -22,7 +22,9 @@ const viewport = {
 };
 
 const bench = new Bench({warmupIterations: 5});
-const tree = new Quadtree(mandelbrot, viewport, SAMPLE_DISTANCE, PIXEL_SIZE);
+
+const tree = new Quadtree(mandelbrot);
+tree.compute(viewport, SAMPLE_DISTANCE, PIXEL_SIZE);
 
 bench.add('eval ∀ pixels', () => {
   const xMin = viewport.x + PIXEL_SIZE / 2;
@@ -36,7 +38,7 @@ bench.add('eval ∀ pixels', () => {
   }
 });
 bench.add('build tree', () => {
-  new Quadtree(mandelbrot, viewport, 1 / 4, 1 / 128);
+  tree.compute(viewport, SAMPLE_DISTANCE, PIXEL_SIZE);
 });
 bench.add('build runs', () => {
   tree.runs();
