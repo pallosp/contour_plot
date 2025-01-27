@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "benchmark": "tsx benchmark/benchmark.ts",
+    "benchmark": "ls -1 benchmark/*.ts | xargs -L1 tsx",
     "dev": "vite",
     "build": "tsc && vite build",
     "coverage": "jest --coverage",

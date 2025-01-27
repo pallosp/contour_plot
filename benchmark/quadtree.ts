@@ -1,3 +1,6 @@
+// Command to run the benchmark:
+// npx tsx benchmark/quadtree
+
 import {Bench} from 'tinybench';
 
 import {Quadtree} from '../src/quadtree';
@@ -25,7 +28,7 @@ const viewport = {
   height: 6
 };
 
-const bench = new Bench({warmupIterations: 5});
+const bench = new Bench({name: 'Quadtree benchmark', warmupIterations: 5});
 
 const mandelbrotTree = new Quadtree(mandelbrot);
 mandelbrotTree.compute(viewport, SAMPLE_DISTANCE, PIXEL_SIZE);
@@ -64,4 +67,5 @@ bench.add('Checkers tree', () => {
 
 await bench.run();
 
+console.info(bench.name);
 console.table(bench.table());
