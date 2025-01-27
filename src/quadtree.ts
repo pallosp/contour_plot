@@ -110,8 +110,8 @@ export class Quadtree<T> {
   }
 
   /**
-   * If the given leaf node is different from any of its neighbors, subdivides
-   * it as well as the different neighbors.
+   * Processes all leaf nodes in the queue. When the node different from any of
+   * its neighbors, subdivides it as well as the different neighbors.
    */
   private traverse() {
     const {coeffX, coeffY, nodes, pixelSize, queue} = this;
