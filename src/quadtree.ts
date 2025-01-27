@@ -92,8 +92,6 @@ export class Quadtree<T> {
    */
   private subdivideLeaf(node: Node<T>) {
     const {x, y, size} = node;
-    const childSize = size / 2;
-    const childRadius = size / 4;
     node.leaf = false;
 
     const parentSize = size * 2;
@@ -108,6 +106,8 @@ export class Quadtree<T> {
     if (xNeighbor?.leaf) this.subdivideLeaf(xNeighbor);
     if (yNeighbor?.leaf) this.subdivideLeaf(yNeighbor);
 
+    const childSize = size / 2;
+    const childRadius = size / 4;
     this.addLeaf(x - childRadius, y - childRadius, childSize);
     this.addLeaf(x + childRadius, y - childRadius, childSize);
     this.addLeaf(x - childRadius, y + childRadius, childSize);
@@ -127,6 +127,15 @@ export class Quadtree<T> {
     const key = coeffX * x + coeffY * y;
     const parentKey = parentX * coeffX + parentY * coeffY;
 
+    if (size === pixelSize) {
+      // x/y neighbors with 2px size
+      const nx = nodes.get(parentKey + (x - parentX) * 4 * coeffX);
+      const ny = nodes.get(parentKey + (y - parentY) * 4 * coeffY);
+      if (nx?.leaf && value !== nx.value) this.subdivideLeaf(nx);
+      if (ny?.leaf && value !== ny.value) this.subdivideLeaf(ny);
+      return;
+    }
+
     const n = nodes.get(key - size * coeffY) ??
         nodes.get(parentKey - parentSize * coeffY);
     const e = nodes.get(key + size * coeffX) ??
@@ -138,23 +147,23 @@ export class Quadtree<T> {
 
     let subdivideThis = false;
     if (n && value !== n.value) {
-      if (n.leaf && n.size > pixelSize) this.subdivideLeaf(n);
+      if (n.leaf) this.subdivideLeaf(n);
       subdivideThis = true;
     }
     if (e && value !== e.value) {
-      if (e.leaf && e.size > pixelSize) this.subdivideLeaf(e);
+      if (e.leaf) this.subdivideLeaf(e);
       subdivideThis = true;
     }
     if (s && value !== s.value) {
-      if (s.leaf && s.size > pixelSize) this.subdivideLeaf(s);
+      if (s.leaf) this.subdivideLeaf(s);
       subdivideThis = true;
     }
     if (w && value !== w.value) {
-      if (w.leaf && w.size > pixelSize) this.subdivideLeaf(w);
+      if (w.leaf) this.subdivideLeaf(w);
       subdivideThis = true;
     }
 
-    if (subdivideThis && leaf.size > pixelSize) {
+    if (subdivideThis) {
       this.subdivideLeaf(leaf);
     }
   }
