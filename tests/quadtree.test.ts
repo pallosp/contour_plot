@@ -221,3 +221,37 @@ test('the traversal does not reach the top left corner', () => {
     {xMin: 0.5, xMax: 3.5, y: 3.5, value: true},
   ]);
 });
+
+// ····
+// ··█·
+// ··█▖
+// ··▝▘
+test('the traversal follows the continuous feature', () => {
+  const tree = new Quadtree(bitmapFunc4x4(0x10440));
+  tree.compute(VIEWPORT_4X4, 2, 1);
+  expect(tree.runs()).toEqual([
+    {xMin: 0.5, xMax: 3.5, y: 0.5, value: false},
+    {xMin: 0.5, xMax: 1.5, y: 1.5, value: false},
+    {xMin: 2.5, xMax: 2.5, y: 1.5, value: true},
+    {xMin: 3.5, xMax: 3.5, y: 1.5, value: false},
+    {xMin: 0.5, xMax: 1.5, y: 2.5, value: false},
+    {xMin: 2.5, xMax: 2.5, y: 2.5, value: true},
+    {xMin: 3.5, xMax: 3.5, y: 2.5, value: false},
+    {xMin: 0.5, xMax: 3.5, y: 3.5, value: false},
+  ]);
+});
+
+test.skip('A/B regression test for experimental features', () => {
+  for (let i = 0; i < 1048576; i++) {
+    const tree = new Quadtree(bitmapFunc4x4(i));
+    tree.compute(VIEWPORT_4X4, 2, 1);
+    const r1 = tree.runs().length;
+    // Enable experimental feature here, e.g. tree.optIn = true;
+    tree.compute(VIEWPORT_4X4, 2, 1);
+    const r2 = tree.runs().length;
+    if (r1 !== r2) {
+      console.log(`func: 0x${i.toString(16)}, before: ${r1}, after: ${r2}`);
+      expect(r1).toBe(r2);
+    }
+  }
+});
