@@ -1,9 +1,12 @@
 import {Quadtree} from '../src/quadtree';
 import {Square} from '../src/types';
 
-function compareLeaves<T>(a: Square<T>, b: Square<T>): number {
-  return (a.y - b.y) || (a.x - b.x);
-}
+const VIEWPORT_4X4 = {
+  x: 0,
+  y: 0,
+  width: 4,
+  height: 4
+};
 
 /**
  * Returns a function that maps the points in a 4x4 viewport to booleans.
@@ -20,6 +23,10 @@ function bitmapFunc4x4(i: number): (x: number, y: number) => boolean {
       (i & 2 ** (y * 4 + x - 2.5)) > 0;
 };
 
+function compareLeaves<T>(a: Square<T>, b: Square<T>): number {
+  return (a.y - b.y) || (a.x - b.x);
+}
+
 test('constant function', () => {
   const tree = new Quadtree(() => 2);
   tree.compute({x: 0, y: 0, width: 1, height: 1}, 1, 1);
@@ -31,7 +38,7 @@ test('constant function', () => {
 
 test('sampling', () => {
   const tree = new Quadtree(() => 0);
-  tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1);
+  tree.compute(VIEWPORT_4X4, 2, 1);
   const squares: Array<Square<number>> = tree.leaves();
   expect(squares.sort(compareLeaves)).toEqual([
     expect.objectContaining({x: 1, y: 1, size: 2, value: 0}),
@@ -60,7 +67,7 @@ test('invalid sample distance', () => {
 
 test('invalid pixel size', () => {
   const tree = new Quadtree(() => 0);
-  expect(() => tree.compute({x: 0, y: 0, width: 4, height: 4}, 4, 3)).toThrow();
+  expect(() => tree.compute(VIEWPORT_4X4, 4, 3)).toThrow();
 });
 
 // █▖··
@@ -69,7 +76,7 @@ test('invalid pixel size', () => {
 // ····
 test('tree compression', () => {
   const tree = new Quadtree((x, y) => x == y && x < 2);
-  tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1);
+  tree.compute(VIEWPORT_4X4, 2, 1);
   expect(tree.leaves().length).toEqual(13);
 
   tree.compress();
@@ -91,13 +98,13 @@ test('tree compression', () => {
 // ····
 test('4x4 viewport, 0 ≤ x = y ≤ 2', () => {
   const tree = new Quadtree((x, y) => x == y && x < 2);
-  tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1);
+  tree.compute(VIEWPORT_4X4, 2, 1);
   expect(tree.leaves().length).toEqual(13);
 });
 
 test('4x4 viewport, x=y=0 or x=y=1, pixel size=2', () => {
   const tree = new Quadtree((x, y) => x == y && x < 2);
-  tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 2);
+  tree.compute(VIEWPORT_4X4, 2, 2);
   expect(tree.leaves().sort(compareLeaves)).toEqual([
     expect.objectContaining({x: 1, y: 1, size: 2, value: true}),
     expect.objectContaining({x: 3, y: 1, size: 2, value: false}),
@@ -112,7 +119,7 @@ test('4x4 viewport, x=y=0 or x=y=1, pixel size=2', () => {
 // ····
 test('sampling too sparse', () => {
   const tree = new Quadtree((x, y) => x + y == 1);
-  tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1);
+  tree.compute(VIEWPORT_4X4, 2, 1);
   expect(tree.leaves().sort(compareLeaves)).toEqual([
     expect.objectContaining({x: 1, y: 1, size: 2, value: false}),
     expect.objectContaining({x: 3, y: 1, size: 2, value: false}),
@@ -165,7 +172,7 @@ test('recomputing with different viewport and resolution', () => {
     expect.objectContaining({x: 3.5, y: 3.5, size: 1, value: true}),
   ]);
 
-  tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 2);
+  tree.compute(VIEWPORT_4X4, 2, 2);
   expect(tree.leaves()).toEqual([
     expect.objectContaining({x: 1, y: 1, size: 2, value: true}),
     expect.objectContaining({x: 3, y: 1, size: 2, value: false}),
@@ -206,7 +213,7 @@ test('runs from different size leaves', () => {
 // ████
 test('the traversal does not reach the top left corner', () => {
   const tree = new Quadtree(bitmapFunc4x4(0x8F001));
-  tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1);
+  tree.compute(VIEWPORT_4X4, 2, 1);
   expect(tree.runs()).toEqual([
     {xMin: 0.5, xMax: 3.5, y: 0.5, value: false},
     {xMin: 0.5, xMax: 3.5, y: 1.5, value: false},
