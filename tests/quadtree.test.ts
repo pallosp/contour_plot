@@ -48,8 +48,8 @@ test('invalid pixel size', () => {
   expect(() => tree.compute({x: 0, y: 0, width: 4, height: 4}, 4, 3)).toThrow();
 });
 
-// O···
-// ·O··
+// █▖··
+// ▝█··
 // ····
 // ····
 test('tree compression', () => {
@@ -70,8 +70,8 @@ test('tree compression', () => {
   ]);
 });
 
-// O···
-// ·O··
+// █▖··
+// ▝█··
 // ····
 // ····
 test('4x4 viewport, 0 ≤ x = y ≤ 2', () => {
@@ -91,7 +91,7 @@ test('4x4 viewport, x=y=0 or x=y=1, pixel size=2', () => {
   ]);
 });
 
-// O···
+// █···
 // ····
 // ····
 // ····
@@ -170,8 +170,8 @@ test('runs from same size leaves', () => {
   ]);
 });
 
-// O········O
-// O········O
+// █········█
+// █········█
 test('runs from different size leaves', () => {
   const tree = new Quadtree((x) => x <= 1 || x >= 9);
   tree.compute({x: 0, y: 0, width: 10, height: 2}, 2, 1);
@@ -183,4 +183,15 @@ test('runs from different size leaves', () => {
     {xMin: 1.5, xMax: 8.5, y: 1.5, value: false},
     {xMin: 9.5, xMax: 9.5, y: 1.5, value: true},
   ]);
+});
+
+// █···
+// ····
+// ··▂▂
+// ████
+test('the traversal does not reach the top left corner', () => {
+  const tree =
+      new Quadtree((x, y) => x < 1 && y < 1 || y > 3 || x > 2 && y >= 3);
+  tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1);
+  expect(tree.runs().length).toBe(4);
 });
