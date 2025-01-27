@@ -5,6 +5,21 @@ function compareLeaves<T>(a: Square<T>, b: Square<T>): number {
   return (a.y - b.y) || (a.x - b.x);
 }
 
+/**
+ * Returns a function that maps the points in a 4x4 viewport to booleans.
+ *
+ * The input is a 20-bit integer.
+ * - Its 0th..15th bits specify the function's value at the (x+0.5, y+0.5)
+ *   grid points.
+ * - Its 16th..19th bits specify the function's value at the (2x+1, 2y+1)
+ *   grid points.
+ */
+function bitmapFunc4x4(i: number): (x: number, y: number) => boolean {
+  return (x: number, y: number) => x % 1 === 0 ?
+      (i & 2 ** (y - 1 + (x - 1) / 2 + 16)) > 0 :
+      (i & 2 ** (y * 4 + x - 2.5)) > 0;
+};
+
 test('constant function', () => {
   const tree = new Quadtree(() => 2);
   tree.compute({x: 0, y: 0, width: 1, height: 1}, 1, 1);
@@ -190,8 +205,12 @@ test('runs from different size leaves', () => {
 // ··▂▂
 // ████
 test('the traversal does not reach the top left corner', () => {
-  const tree =
-      new Quadtree((x, y) => x < 1 && y < 1 || y > 3 || x > 2 && y >= 3);
+  const tree = new Quadtree(bitmapFunc4x4(0x8F001));
   tree.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1);
-  expect(tree.runs().length).toBe(4);
+  expect(tree.runs()).toEqual([
+    {xMin: 0.5, xMax: 3.5, y: 0.5, value: false},
+    {xMin: 0.5, xMax: 3.5, y: 1.5, value: false},
+    {xMin: 0.5, xMax: 3.5, y: 2.5, value: false},
+    {xMin: 0.5, xMax: 3.5, y: 3.5, value: true},
+  ]);
 });
