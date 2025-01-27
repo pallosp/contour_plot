@@ -70,12 +70,7 @@ export class Quadtree<T> {
     this.sampleDistance = sampleDistance;
     this.pixelSize = pixelSize;
 
-    let node: Node<T>|undefined;
-    while ((node = this.queue.pop())) {
-      if (node.leaf) {
-        this.processLeaf(node);
-      }
-    }
+    this.traverse();
   }
 
   private addLeaf(x: number, y: number, size: number) {
@@ -118,53 +113,58 @@ export class Quadtree<T> {
    * If the given leaf node is different from any of its neighbors, subdivides
    * it as well as the different neighbors.
    */
-  private processLeaf(leaf: Node<T>) {
-    const {x, y, size, value} = leaf;
-    const {coeffX, coeffY, nodes, pixelSize} = this;
-    const parentSize = size * 2;
-    const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
-    const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
-    const key = coeffX * x + coeffY * y;
-    const parentKey = parentX * coeffX + parentY * coeffY;
+  private traverse() {
+    const {coeffX, coeffY, nodes, pixelSize, queue} = this;
+    let node: Node<T>|undefined;
+    while ((node = queue.pop())) {
+      if (!node.leaf) continue;
 
-    if (size === pixelSize) {
-      // x/y neighbors with 2px size
-      const nx = nodes.get(parentKey + (x - parentX) * 4 * coeffX);
-      const ny = nodes.get(parentKey + (y - parentY) * 4 * coeffY);
-      if (nx?.leaf && value !== nx.value) this.subdivideLeaf(nx);
-      if (ny?.leaf && value !== ny.value) this.subdivideLeaf(ny);
-      return;
-    }
+      const {x, y, size, value} = node;
+      const parentSize = size * 2;
+      const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
+      const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
+      const key = coeffX * x + coeffY * y;
+      const parentKey = parentX * coeffX + parentY * coeffY;
 
-    const n = nodes.get(key - size * coeffY) ??
-        nodes.get(parentKey - parentSize * coeffY);
-    const e = nodes.get(key + size * coeffX) ??
-        nodes.get(parentKey + parentSize * coeffX);
-    const s = nodes.get(key + size * coeffY) ??
-        nodes.get(parentKey + parentSize * coeffY);
-    const w = nodes.get(key - size * coeffX) ??
-        nodes.get(parentKey - parentSize * coeffX);
+      if (size === pixelSize) {
+        // x/y neighbors with 2px size
+        const nx = nodes.get(parentKey + (x - parentX) * 4 * coeffX);
+        const ny = nodes.get(parentKey + (y - parentY) * 4 * coeffY);
+        if (nx?.leaf && value !== nx.value) this.subdivideLeaf(nx);
+        if (ny?.leaf && value !== ny.value) this.subdivideLeaf(ny);
+        continue;
+      }
 
-    let subdivideThis = false;
-    if (n && value !== n.value) {
-      if (n.leaf) this.subdivideLeaf(n);
-      subdivideThis = true;
-    }
-    if (e && value !== e.value) {
-      if (e.leaf) this.subdivideLeaf(e);
-      subdivideThis = true;
-    }
-    if (s && value !== s.value) {
-      if (s.leaf) this.subdivideLeaf(s);
-      subdivideThis = true;
-    }
-    if (w && value !== w.value) {
-      if (w.leaf) this.subdivideLeaf(w);
-      subdivideThis = true;
-    }
+      const n = nodes.get(key - size * coeffY) ??
+          nodes.get(parentKey - parentSize * coeffY);
+      const e = nodes.get(key + size * coeffX) ??
+          nodes.get(parentKey + parentSize * coeffX);
+      const s = nodes.get(key + size * coeffY) ??
+          nodes.get(parentKey + parentSize * coeffY);
+      const w = nodes.get(key - size * coeffX) ??
+          nodes.get(parentKey - parentSize * coeffX);
 
-    if (subdivideThis) {
-      this.subdivideLeaf(leaf);
+      let subdivideThis = false;
+      if (n && value !== n.value) {
+        if (n.leaf) this.subdivideLeaf(n);
+        subdivideThis = true;
+      }
+      if (e && value !== e.value) {
+        if (e.leaf) this.subdivideLeaf(e);
+        subdivideThis = true;
+      }
+      if (s && value !== s.value) {
+        if (s.leaf) this.subdivideLeaf(s);
+        subdivideThis = true;
+      }
+      if (w && value !== w.value) {
+        if (w.leaf) this.subdivideLeaf(w);
+        subdivideThis = true;
+      }
+
+      if (subdivideThis) {
+        this.subdivideLeaf(node);
+      }
     }
   }
 
