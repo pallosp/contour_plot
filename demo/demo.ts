@@ -39,7 +39,7 @@ function plotRandomLines() {
                 (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3)) ?
             0 :
             1),
-    sampleDistance: 1 / 4,
+    sampleDistance: 1 / 2,
     classes: ['perimeter', 'outside'],
     zoom,
   });
@@ -60,7 +60,7 @@ function plotRandomCircles() {
   plotFunction({
     tree: new Quadtree(
         (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1) + 1),
-    sampleDistance: 1 / 4,
+    sampleDistance: 1 / 2,
     classes: ['outside', 'perimeter', 'inside'],
     zoom,
   });
@@ -81,7 +81,7 @@ function plotMandelbrot() {
   vd.reset(zoom);
   plotFunction({
     tree: new Quadtree(mandelbrot),
-    sampleDistance: 1 / 4,
+    sampleDistance: 1 / 2,
     classes: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'],
     zoom,
   });
@@ -93,7 +93,7 @@ function plotSinCos() {
   plotFunction({
     tree: new Quadtree(
         (x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5) + 3),
-    sampleDistance: 1 / 4,
+    sampleDistance: 1,
     classes: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'],
     zoom,
   });
@@ -106,8 +106,8 @@ function roundDownToPow2(x: number): number {
 function plotFunction(plot: Plot) {
   lastPlot = plot;
   let {tree, sampleDistance, classes} = plot;
-  const showEdges = document.getElementById('show-edges') as HTMLInputElement;
-  const useRuns = document.getElementById('use-runs') as HTMLInputElement;
+  const useBlocks =
+      (document.getElementById('use-blocks') as HTMLInputElement).checked;
   const viewport = vd.viewport();
   const pixelSizeInput =
       document.querySelector<HTMLInputElement>('#pixel-size')!;
@@ -120,19 +120,19 @@ function plotFunction(plot: Plot) {
   const startPostprocess = Date.now();
   let runs: Array<Run<number>> = [];
   let squares: Array<Square<number>> = [];
-  if (useRuns.checked) {
-    runs = tree.runs();
-  } else {
+  if (useBlocks) {
     tree.compress();
     squares = tree.leaves();
+  } else {
+    runs = tree.runs();
   }
 
   const startDraw = Date.now();
   const valueToClass = (value: number) => classes[value];
-  const pathElements = useRuns.checked ?
-      runsToPathElements(runs, valueToClass) :
-      squaresToPathElements(squares, valueToClass);
-  if (showEdges.checked) {
+  const pathElements = useBlocks ?
+      squaresToPathElements(squares, valueToClass) :
+      runsToPathElements(runs, valueToClass);
+  if (useBlocks) {
     for (const path of pathElements) {
       path.setAttribute('stroke-width', '0.9px');
       path.removeAttribute('shape-rendering');
@@ -170,8 +170,7 @@ function main() {
   document.getElementById('random-circles')!.onclick = plotRandomCircles;
   document.getElementById('mandelbrot-set')!.onclick = plotMandelbrot;
   document.getElementById('sin-cos')!.onclick = plotSinCos;
-  document.getElementById('show-edges')!.onclick = updatePlot;
-  document.getElementById('use-runs')!.onclick = updatePlot;
+  document.getElementById('use-blocks')!.onclick = updatePlot;
   document.getElementById('pixel-size')!.onchange = updatePlot;
 
   vd.addEventListener('change', updatePlot);
