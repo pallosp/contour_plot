@@ -22,10 +22,10 @@ function checkerboard(x: number, y: number): boolean {
 const PIXEL_SIZE = 1 / 128;
 const SAMPLE_DISTANCE = 1 / 4;
 const viewport = {
-  x: -3,
-  y: -3,
-  width: 6,
-  height: 6
+  x: -2,
+  y: 0,
+  width: 4,
+  height: 2
 };
 
 const bench = new Bench({name: 'Quadtree benchmark', warmupIterations: 5});
