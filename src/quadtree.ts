@@ -188,11 +188,11 @@ export class Quadtree<T> {
   }
 
   /**
-   * Traverses the tree from the given root node. Merges its subtrees in which
-   * all nodes have the same value into a single node. Returns the common value
-   * of the subtree nodes, or NON_UNIFORM if they are different.
+   * Helper function to traverse the tree and collect the nodes for
+   * this.squares(). Returns the common value of the subtree nodes, or
+   * NON_UNIFORM if they are different.
    */
-  private compressSubtree(node: Node<T>): T|symbol {
+  private collectSquares(node: Node<T>, squares: Array<Node<T>>): T|symbol {
     if (node.leaf) {
       return node.value;
     }
@@ -204,34 +204,35 @@ export class Quadtree<T> {
     const child2 = nodes.get(key + childRadius * (coeffX - coeffY))!;
     const child3 = nodes.get(key - childRadius * (coeffX + coeffY))!;
     const child4 = nodes.get(key - childRadius * (coeffX - coeffY))!;
-    const v1 = this.compressSubtree(child1);
-    const v2 = this.compressSubtree(child2);
-    const v3 = this.compressSubtree(child3);
-    const v4 = this.compressSubtree(child4);
+    const v1 = this.collectSquares(child1, squares);
+    const v2 = this.collectSquares(child2, squares);
+    const v3 = this.collectSquares(child3, squares);
+    const v4 = this.collectSquares(child4, squares);
     if (v1 === NON_UNIFORM || v1 !== v2 || v1 !== v3 || v1 !== v4) {
+      if (v1 !== NON_UNIFORM) squares.push(child1);
+      if (v2 !== NON_UNIFORM) squares.push(child2);
+      if (v3 !== NON_UNIFORM) squares.push(child3);
+      if (v4 !== NON_UNIFORM) squares.push(child4);
       return NON_UNIFORM;
     }
-    child1.leaf = false;
-    child2.leaf = false;
-    child3.leaf = false;
-    child4.leaf = false;
-    node.leaf = true;
     node.value = v1 as T;
     return v1;
   }
 
   /**
-   * Traverses the tree. Merges its subtrees in which all nodes have the same
-   * value into a single node. Doesn't prune the excess nodes, so this.size()
-   * stays the same.
+   * Returns the smallest subset of tree nodes that cover the viewport, and
+   * within each tree node the plotted function evaluates to the same value.
    */
-  compress() {
+  squares(): Array<Node<T>> {
+    const squares: Array<Node<T>> = [];
     for (const node of this.nodes.values()) {
-      if (node.size < this.sampleDistance) {
-        break;
+      if (node.size < this.sampleDistance) break;
+
+      if (this.collectSquares(node, squares) !== NON_UNIFORM) {
+        squares.push(node);
       }
-      this.compressSubtree(node);
     }
+    return squares;
   }
 
   /** Returns the leaf nodes of the quadtree in no specific order. */

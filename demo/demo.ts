@@ -1,6 +1,5 @@
 import {Quadtree} from '../src/quadtree';
 import {runsToPathElements, squaresToPathElements} from '../src/render';
-import {Run, Square} from '../src/types';
 
 import {ViewportDragger} from './viewport_dragger';
 
@@ -118,14 +117,8 @@ function plotFunction(plot: Plot) {
   tree.compute(viewport, sampleDistance, pixelSize);
 
   const startPostprocess = Date.now();
-  let runs: Array<Run<number>> = [];
-  let squares: Array<Square<number>> = [];
-  if (useBlocks) {
-    tree.compress();
-    squares = tree.leaves();
-  } else {
-    runs = tree.runs();
-  }
+  const runs = useBlocks ? [] : tree.runs();
+  const squares = useBlocks ? tree.squares() : [];
 
   const startDraw = Date.now();
   const valueToClass = (value: number) => classes[value];
