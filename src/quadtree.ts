@@ -38,7 +38,8 @@ export class Quadtree<T> {
 
   constructor(readonly func: (x: number, y: number) => T) {};
 
-  public compute(viewport: Rect, sampleDistance: number, pixelSize: number) {
+  public compute(viewport: Rect, sampleDistance: number, pixelSize: number):
+      this {
     assert(Number.isInteger(Math.log2(sampleDistance)));
     assert(Number.isInteger(Math.log2(pixelSize)));
 
@@ -71,6 +72,7 @@ export class Quadtree<T> {
     this.pixelSize = pixelSize;
 
     this.traverse();
+    return this;
   }
 
   private addChildren(x: number, y: number, size: number) {

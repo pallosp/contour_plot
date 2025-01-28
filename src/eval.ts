@@ -12,8 +12,8 @@ export function evalDiscrete2dFunction<T>(
     sampleDistance: number,
     pixelSize: number,
     ): Array<Square<T>> {
-  const tree = new Quadtree<T>(func);
-  tree.compute(viewport, sampleDistance, pixelSize);
+  const tree =
+      new Quadtree<T>(func).compute(viewport, sampleDistance, pixelSize);
   tree.compress();
   return tree.leaves();
 }
@@ -29,7 +29,7 @@ export function evalDiscrete2dFunctionAsRuns<T>(
     sampleDistance: number,
     pixelSize: number,
     ): Array<Run<T>> {
-  const tree = new Quadtree<T>(func);
-  tree.compute(viewport, sampleDistance, pixelSize);
-  return tree.runs();
+  return new Quadtree<T>(func)
+      .compute(viewport, sampleDistance, pixelSize)
+      .runs();
 }

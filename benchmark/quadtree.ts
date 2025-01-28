@@ -30,8 +30,8 @@ const viewport = {
 
 const bench = new Bench({name: 'Quadtree benchmark', warmupIterations: 5});
 
-const mandelbrotTree = new Quadtree(mandelbrot);
-mandelbrotTree.compute(viewport, SAMPLE_DISTANCE, PIXEL_SIZE);
+const mandelbrotTree =
+    new Quadtree(mandelbrot).compute(viewport, SAMPLE_DISTANCE, PIXEL_SIZE);
 
 bench.add('Mandelbrot ∀ px', () => {
   const xMin = viewport.x + PIXEL_SIZE / 2;
