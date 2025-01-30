@@ -1,8 +1,21 @@
 {
-  "name": "contour_plot",
-  "private": true,
+  "name": "contour-plot",
+  "description": "Library to evaluate and visualize functions that map Euclidean points to discrete values.",
+  "sideEffects": false,
   "version": "0.0.0",
   "type": "module",
+  "author": {
+    "name": "Péter Pallos"
+  },
+  "repository": "github:pallosp/contour_plot",
+  "license": "MIT",
+  "keywords": [
+    "math",
+    "plot",
+    "chart",
+    "visualization",
+    "svg"
+  ],
   "scripts": {
     "benchmark": "ls -1 benchmark/*.ts | xargs -L1 tsx",
     "dev": "vite",
