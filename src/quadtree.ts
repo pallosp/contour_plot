@@ -38,6 +38,12 @@ export class Quadtree<T> {
 
   constructor(readonly func: (x: number, y: number) => T) {};
 
+  /**
+   * Evaluates `this.func(x, y)` at each grid point within `viewport`, spaced
+   * `sampleDistance` apart. If neighboring points have different values, the
+   * function is refined between them at double resolution, continuing until
+   * the resolution reaches `pixelSize`.
+   */
   public compute(viewport: Rect, sampleDistance: number, pixelSize: number):
       this {
     assert(Number.isInteger(Math.log2(sampleDistance)));
