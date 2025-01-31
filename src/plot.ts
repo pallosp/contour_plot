@@ -8,40 +8,42 @@ interface Node<T> extends Square<T> {
 }
 
 /**
- * Special value used for composite Quadtree nodes whose subtree contains nodes
- * with at least two different values.
+ * A special value assigned to tree nodes where the function is known to take at
+ * least two distinct values within the node's area.
  */
 const NON_UNIFORM = Symbol();
 
-export class Quadtree<T> {
+export class Plot<T> {
   /**
-   * Quadtree nodes keyed by x*coeffX+y*coeffY.
+   * Nodes of the underlying quadtree, keyed by x * coeffX + y * coeffY.
    */
   private nodes = new Map<number, Node<T>>();
 
   /**
-   * Powers of 2. x*coeffX+y*coeffY are unique integers for all possible
-   * quadtree nodes in the domain rectangle.
+   * Coefficients to map valid (x, y) coordinates in the domain rectangle to
+   * unique integers.
    */
   private coeffX = 0;
   private coeffY = 0;
 
+  /** Rectangle in which this.func was last evaluated. */
   private domain: Rect = {x: 0, y: 0, width: 0, height: 0};
   private sampleSpacing = 0;
   private pixelSize = 0;
 
   /**
-   * LIFO queue of nodes for which the plotted function's value has been
-   * computed, but it hasn't been decided whether the node should be subdivided.
+   * LIFO queue of quadtree nodes for which the plotted function's value has
+   * been computed, but it hasn't been decided whether the node should be
+   * subdivided.
    */
   private readonly queue: Array<Node<T>> = [];
 
   constructor(readonly func: (x: number, y: number) => T) {};
 
   /**
-   * Evaluates `this.func(x, y)` at every grid point within the `domain`
-   * rectangle, spaced `sampleSpacing` apart. If neighboring points have
-   * different values, the function is refined between them at double
+   * Evaluates the function passed to the constructor at every grid point within
+   * the `domain` rectangle, spaced `sampleSpacing` apart. If neighboring points
+   * have different values, the function is refined between them at double
    * resolution, continuing until the resolution reaches `pixelSize`.
    */
   public compute(domain: Rect, sampleSpacing: number, pixelSize: number): this {
@@ -197,7 +199,7 @@ export class Quadtree<T> {
    * this.squares(). Returns the common value of the subtree nodes, or
    * NON_UNIFORM if they are different.
    */
-  private collectSquares(node: Node<T>, squares: Array<Node<T>>): T|symbol {
+  private collectSquares(node: Node<T>, squares: Array<Square<T>>): T|symbol {
     if (node.leaf) {
       return node.value;
     }
@@ -225,35 +227,30 @@ export class Quadtree<T> {
   }
 
   /**
-   * Returns the smallest subset of tree nodes that cover the domain rectangle,
-   * and within each tree node the plotted function evaluates to the same value.
+   * Returns a list of squares that cover the domain rectangle without overlap,
+   * and within each square the plotted function evaluates to the same value.
+   * When compression is enabled, merges equal valued neighboring squares.
    */
-  squares(): Array<Node<T>> {
-    const squares: Array<Node<T>> = [];
-    for (const node of this.nodes.values()) {
-      if (node.size < this.sampleSpacing) break;
-
-      if (this.collectSquares(node, squares) !== NON_UNIFORM) {
-        squares.push(node);
+  squares(compress = true): Array<Square<T>> {
+    const squares: Array<Square<T>> = [];
+    if (compress) {
+      for (const node of this.nodes.values()) {
+        if (node.size < this.sampleSpacing) break;
+        if (this.collectSquares(node, squares) !== NON_UNIFORM) {
+          squares.push(node);
+        }
+      }
+    } else {
+      for (const node of this.nodes.values()) {
+        if (node.leaf) squares.push(node);
       }
     }
     return squares;
   }
 
-  /** Returns the leaf nodes of the quadtree in no specific order. */
-  leaves(): Array<Node<T>> {
-    const leaves = [];
-    for (const node of this.nodes.values()) {
-      if (node.leaf) {
-        leaves.push(node);
-      }
-    }
-    return leaves;
-  }
-
   /**
-   * Number of nodes in the tree. It's equal to the number of evaluations of the
-   * plotted function.
+   * Number of nodes in the underlying quadtree. It's equal to the number of
+   * evaluations of the plotted function.
    */
   size(): number {
     return this.nodes.size;
@@ -271,7 +268,7 @@ export class Quadtree<T> {
   }
 
   /**
-   * Converts the tree to a list of "runs". Each run is a horizontal line
+   * Returns the plot as a list of "runs". Each run is a horizontal line
    * aligned to the center of the "pixels", along which the plotted function's
    * value is considered constant.
    */

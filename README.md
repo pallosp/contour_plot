@@ -25,7 +25,7 @@ const domain = {x: -width / 2, y: -height / 2, width, height};
 plot.style.transform = `translate(${-domain.x}px, ${-domain.y}px)`;
 
 plot.append(...squaresToSvg(
-    new Quadtree(hyperbola)
+    new Plot(hyperbola)
         .compute(domain, /* sampleSpacing= */ 128, /* pixelSize= */ 1)
         .squares(),
     /* addStyles= */ (isInside, el) => {

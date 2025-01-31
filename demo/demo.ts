@@ -1,15 +1,15 @@
-import {Quadtree, runsToSvg, squaresToSvg} from '../src';
+import {Plot, runsToSvg, squaresToSvg} from '../src';
 
 import {ViewportDragger} from './viewport_dragger';
 
-type Plot<T> = {
-  tree: Quadtree<T>,
+type PlotParams<T> = {
+  plot: Plot<T>,
   sampleSpacing: number,
   addStyles: (value: T, element: SVGElement) => void,
   zoom: number,
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let lastPlot: Plot<any>|undefined;
+let lastPlotParams: PlotParams<any>|undefined;
 
 const svg = document.querySelector('svg')!;
 const chart = svg.querySelector<SVGElement>('#chart')!;
@@ -32,7 +32,7 @@ function plotRandomLines() {
     lines.push([random(-5, 5), random(-5, 5), random(-25, 25)]);
   }
   plotFunction({
-    tree: new Quadtree(
+    plot: new Plot(
         (x, y) => lines.some(
             (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3))),
     sampleSpacing: 1 / 2,
@@ -40,7 +40,7 @@ function plotRandomLines() {
       el.classList.add(value ? 'outside' : 'perimeter');
     },
     zoom,
-  } as Plot<boolean>);
+  } as PlotParams<boolean>);
 }
 
 function circleAt([cx, cy, r]: [number, number, number], x: number, y: number) {
@@ -57,8 +57,9 @@ function plotRandomCircles() {
   }
   const classes = ['outside', 'perimeter', 'inside'];
   plotFunction({
-    tree: new Quadtree(
-        (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1)),
+    plot: new Plot(
+        (x: number, y: number) =>
+            circles.reduce((acc, c) => acc * circleAt(c, x, y), 1)),
     sampleSpacing: 1 / 2,
     addStyles: (value, el) => void el.classList.add(classes[value + 1]),
     zoom,
@@ -79,35 +80,35 @@ function plotMandelbrot() {
   const zoom = 256;
   vd.reset(zoom);
   plotFunction({
-    tree: new Quadtree(mandelbrot),
+    plot: new Plot(mandelbrot),
     sampleSpacing: 1 / 2,
     addStyles: (value, el) => {
       el.style.stroke = '#' + (value % 6 * 3).toString(16).repeat(3);
     },
     zoom,
-  });
+  } as PlotParams<number>);
 }
 
 function plotSinCos() {
   const zoom = 64;
   vd.reset(zoom);
   plotFunction({
-    tree: new Quadtree((x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5)),
+    plot: new Plot((x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5)),
     sampleSpacing: 1,
     addStyles: (value, el) => {
       el.style.stroke = '#' + ((value + 3) * 3).toString(16).repeat(3);
     },
     zoom,
-  } as Plot<number>);
+  } as PlotParams<number>);
 }
 
 function roundDownToPow2(x: number): number {
   return 2 ** Math.floor(Math.log2(x));
 }
 
-function plotFunction<T>(plot: Plot<T>) {
-  lastPlot = plot;
-  let {tree, sampleSpacing, addStyles} = plot;
+function plotFunction<T>(plotParams: PlotParams<T>) {
+  lastPlotParams = plotParams;
+  let {plot, sampleSpacing, addStyles} = plotParams;
   const useBlocks =
       (document.getElementById('use-blocks') as HTMLInputElement).checked;
   const viewport = vd.viewport();
@@ -117,11 +118,11 @@ function plotFunction<T>(plot: Plot<T>) {
   sampleSpacing = Math.max(sampleSpacing, pixelSize);
 
   const startCompute = Date.now();
-  tree.compute(viewport, sampleSpacing, pixelSize);
+  plot.compute(viewport, sampleSpacing, pixelSize);
 
   const startPostprocess = Date.now();
-  const runs = useBlocks ? [] : tree.runs();
-  const squares = useBlocks ? tree.squares() : [];
+  const runs = useBlocks ? [] : plot.runs();
+  const squares = useBlocks ? plot.squares() : [];
 
   const startDraw = Date.now();
   const svgElements =
@@ -140,7 +141,7 @@ function plotFunction<T>(plot: Plot<T>) {
   const computeTime = startPostprocess - startCompute;
   const postprocessTime = startDraw - startPostprocess;
   const renderTime = Date.now() - startDraw;
-  const evalCount = tree.size();
+  const evalCount = plot.size();
   const rectCount = squares.length + runs.length;
   const pixelCount = viewport.width * viewport.height / pixelSize ** 2;
   const pixelPerEval = Math.round(pixelCount * 10 / evalCount) / 10;
@@ -154,10 +155,10 @@ function plotFunction<T>(plot: Plot<T>) {
 }
 
 function updatePlot() {
-  lastPlot!.sampleSpacing *=
-      roundDownToPow2(lastPlot!.zoom) / roundDownToPow2(vd.zoom);
-  lastPlot!.zoom = vd.zoom;
-  plotFunction(lastPlot!);
+  lastPlotParams!.sampleSpacing *=
+      roundDownToPow2(lastPlotParams!.zoom) / roundDownToPow2(vd.zoom);
+  lastPlotParams!.zoom = vd.zoom;
+  plotFunction(lastPlotParams!);
 }
 
 function main() {

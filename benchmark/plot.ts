@@ -1,9 +1,9 @@
 // Command to run the benchmark:
-// npx tsx benchmark/quadtree
+// npx tsx benchmark/plot
 
 import {Bench} from 'tinybench';
 
-import {Quadtree} from '../src/quadtree';
+import {Plot} from '../src/plot';
 
 function mandelbrot(x: number, y: number): number {
   let re = x, im = y, i = 0;
@@ -28,12 +28,12 @@ const viewport = {
   height: 2
 };
 
-const bench = new Bench({name: 'Quadtree benchmark', warmupIterations: 5});
+const bench = new Bench({name: 'Plot benchmark', warmupIterations: 5});
 
-const mandelbrotTree =
-    new Quadtree(mandelbrot).compute(viewport, SAMPLE_SPACING, PIXEL_SIZE);
+const mandelbrotPlot =
+    new Plot(mandelbrot).compute(viewport, SAMPLE_SPACING, PIXEL_SIZE);
 
-bench.add('Mandelbrot ∀ px', () => {
+bench.add('Mandelbrot eval ∀ px', () => {
   const xMin = viewport.x + PIXEL_SIZE / 2;
   const xMax = viewport.x + viewport.width - PIXEL_SIZE / 2;
   const yMin = viewport.y + PIXEL_SIZE / 2;
@@ -44,25 +44,25 @@ bench.add('Mandelbrot ∀ px', () => {
     }
   }
 });
-bench.add('Mandelbrot tree', () => {
-  mandelbrotTree.compute(viewport, SAMPLE_SPACING, PIXEL_SIZE);
+bench.add('Mandelbrot compute', () => {
+  mandelbrotPlot.compute(viewport, SAMPLE_SPACING, PIXEL_SIZE);
 });
 bench.add('Mandelbrot runs', () => {
-  mandelbrotTree.runs();
+  mandelbrotPlot.runs();
 });
 
-const checkerboardTree = new Quadtree(
+const checkerboardPlot = new Plot(
     (x, y) => x === y || Math.clz32(x - y & y - x) + 1 < Math.clz32(x & -x));
 
-bench.add('Checkers ∀ px', () => {
+bench.add('Checkers eval ∀ px', () => {
   for (let y = 1; y < 128; y += 2) {
     for (let x = 1; x < 128; x += 2) {
       checkerboard(x, y);
     }
   }
 });
-bench.add('Checkers tree', () => {
-  checkerboardTree.compute({x: 0, y: 0, width: 128, height: 128}, 16, 2);
+bench.add('Checkers compute', () => {
+  checkerboardPlot.compute({x: 0, y: 0, width: 128, height: 128}, 16, 2);
 });
 
 await bench.run();
