@@ -243,7 +243,7 @@ test.skip('A/B regression test for experimental features', () => {
     tree.compute(VIEWPORT_4X4, 2, 1);
     const r2 = tree.runs().length;
     if (r1 !== r2) {
-      console.log(`func: 0x${i.toString(16)}, before: ${r1}, after: ${r2}`);
+      console.warn(`func: 0x${i.toString(16)}, before: ${r1}, after: ${r2}`);
       expect(r1).toBe(r2);
     }
   }
