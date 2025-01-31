@@ -10,7 +10,10 @@
 The following TypeScript code snippet will create an SVG and draw a filled hyperbola:
 
 ```typescript
-document.body.innerHTML = '<svg style="flex-grow:1"><g id="plot"/></svg>';
+document.body.innerHTML = `
+    <svg style="width: 100%; height: calc(100vh - 20px)">
+      <g id="plot"/>
+    </svg>`;
 const svg = document.querySelector('svg')!;
 const plot = svg.querySelector('#plot') as SVGElement;
 
