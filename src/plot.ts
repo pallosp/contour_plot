@@ -15,7 +15,7 @@ const NON_UNIFORM = Symbol();
 
 export class Plot<T> {
   /**
-   * Nodes of the underlying quadtree, keyed by x * coeffX + y * coeffY.
+   * Nodes of the underlying quadtree, keyed by x * cx + y * cy.
    */
   private nodes = new Map<number, Node<T>>();
 
@@ -23,8 +23,8 @@ export class Plot<T> {
    * Coefficients to map valid (x, y) coordinates in the domain rectangle to
    * unique integers.
    */
-  private coeffX = 0;
-  private coeffY = 0;
+  private cx = 0;
+  private cy = 0;
 
   /** Rectangle in which this.func was last evaluated. */
   private domain: Rect = {x: 0, y: 0, width: 0, height: 0};
@@ -59,12 +59,12 @@ export class Plot<T> {
     const yStop = (Math.ceil(bottom / squareSize) + 0.5) * squareSize;
 
     this.nodes = new Map();
-    this.coeffX = 2 / pixelSize;
-    this.coeffY = (xStop - xStart) / pixelSize * this.coeffX;
+    this.cx = 2 / pixelSize;
+    this.cy = (xStop - xStart) / pixelSize * this.cx;
 
     for (let y = yStart; y < yStop; y += squareSize) {
       for (let x = xStart; x < xStop; x += squareSize) {
-        const key = this.coeffX * x + this.coeffY * y;
+        const key = this.cx * x + this.cy * y;
         this.nodes.set(
             key, {x, y, size: squareSize, value: this.func(x, y), leaf: true});
       }
@@ -83,27 +83,27 @@ export class Plot<T> {
   }
 
   private addChildren(x: number, y: number, size: number) {
-    const {coeffX, coeffY, func, nodes} = this;
+    const {cx, cy, func, nodes} = this;
     x -= size / 4;
     y -= size / 4;
     size /= 2;
 
-    let key = coeffX * x + coeffY * y;
+    let key = cx * x + cy * y;
     const leaf1 = {x, y, size, value: func(x, y), leaf: true};
     nodes.set(key, leaf1);
 
     x += size;
-    key += size * coeffX;
+    key += size * cx;
     const leaf2 = {x, y, size, value: func(x, y), leaf: true};
     nodes.set(key, leaf2);
 
     y += size;
-    key += size * coeffY;
+    key += size * cy;
     const leaf3 = {x, y, size, value: func(x, y), leaf: true};
     nodes.set(key, leaf3);
 
     x -= size;
-    key -= size * coeffX;
+    key -= size * cx;
     const leaf4 = {x, y, size, value: func(x, y), leaf: true};
     nodes.set(key, leaf4);
 
@@ -123,11 +123,9 @@ export class Plot<T> {
     const parentSize = size * 2;
     const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
     const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
-    const parentKey = this.coeffX * parentX + this.coeffY * parentY;
-    const xNeighbor =
-        this.nodes.get(parentKey + 4 * (x - parentX) * this.coeffX);
-    const yNeighbor =
-        this.nodes.get(parentKey + 4 * (y - parentY) * this.coeffY);
+    const parentKey = this.cx * parentX + this.cy * parentY;
+    const xNeighbor = this.nodes.get(parentKey + 4 * (x - parentX) * this.cx);
+    const yNeighbor = this.nodes.get(parentKey + 4 * (y - parentY) * this.cy);
 
     if (xNeighbor?.leaf) this.subdivideLeaf(xNeighbor);
     if (yNeighbor?.leaf) this.subdivideLeaf(yNeighbor);
@@ -140,7 +138,7 @@ export class Plot<T> {
    * its neighbors, subdivides it as well as the different neighbors.
    */
   private traverse() {
-    const {coeffX, coeffY, nodes, pixelSize, queue} = this;
+    const {cx, cy, nodes, pixelSize, queue} = this;
     let node: Node<T>|undefined;
     while ((node = queue.pop())) {
       if (!node.leaf) continue;
@@ -149,26 +147,26 @@ export class Plot<T> {
       const parentSize = size * 2;
       const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
       const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
-      const key = coeffX * x + coeffY * y;
-      const parentKey = parentX * coeffX + parentY * coeffY;
+      const key = cx * x + cy * y;
+      const parentKey = parentX * cx + parentY * cy;
 
       if (size === pixelSize) {
         // x/y neighbors with 2px size
-        const nx = nodes.get(parentKey + (x - parentX) * 4 * coeffX);
-        const ny = nodes.get(parentKey + (y - parentY) * 4 * coeffY);
+        const nx = nodes.get(parentKey + (x - parentX) * 4 * cx);
+        const ny = nodes.get(parentKey + (y - parentY) * 4 * cy);
         if (nx?.leaf && value !== nx.value) this.subdivideLeaf(nx);
         if (ny?.leaf && value !== ny.value) this.subdivideLeaf(ny);
         continue;
       }
 
-      const n = nodes.get(key - size * coeffY) ??
-          nodes.get(parentKey - parentSize * coeffY);
-      const e = nodes.get(key + size * coeffX) ??
-          nodes.get(parentKey + parentSize * coeffX);
-      const s = nodes.get(key + size * coeffY) ??
-          nodes.get(parentKey + parentSize * coeffY);
-      const w = nodes.get(key - size * coeffX) ??
-          nodes.get(parentKey - parentSize * coeffX);
+      const n =
+          nodes.get(key - size * cy) ?? nodes.get(parentKey - parentSize * cy);
+      const e =
+          nodes.get(key + size * cx) ?? nodes.get(parentKey + parentSize * cx);
+      const s =
+          nodes.get(key + size * cy) ?? nodes.get(parentKey + parentSize * cy);
+      const w =
+          nodes.get(key - size * cx) ?? nodes.get(parentKey - parentSize * cx);
 
       let subdivideThis = false;
       if (n && value !== n.value) {
@@ -205,12 +203,12 @@ export class Plot<T> {
     }
     const {x, y, size} = node;
     const childRadius = size / 4;
-    const {coeffX, coeffY, nodes} = this;
-    const key = coeffX * x + coeffY * y;
-    const child1 = nodes.get(key + childRadius * (coeffX + coeffY))!;
-    const child2 = nodes.get(key + childRadius * (coeffX - coeffY))!;
-    const child3 = nodes.get(key - childRadius * (coeffX + coeffY))!;
-    const child4 = nodes.get(key - childRadius * (coeffX - coeffY))!;
+    const {cx, cy, nodes} = this;
+    const key = cx * x + cy * y;
+    const child1 = nodes.get(key + childRadius * (cx + cy))!;
+    const child2 = nodes.get(key + childRadius * (cx - cy))!;
+    const child3 = nodes.get(key - childRadius * (cx + cy))!;
+    const child4 = nodes.get(key - childRadius * (cx - cy))!;
     const v1 = this.collectSquares(child1, squares);
     const v2 = this.collectSquares(child2, squares);
     const v3 = this.collectSquares(child3, squares);
@@ -259,7 +257,7 @@ export class Plot<T> {
   private leafAt(x: number, y: number): Node<T> {
     let node: Node<T>|undefined;
     let size = this.pixelSize;
-    while (!(node = this.nodes.get(this.coeffX * x + this.coeffY * y))) {
+    while (!(node = this.nodes.get(this.cx * x + this.cy * y))) {
       size *= 2;
       x = (Math.floor(x / size) + 0.5) * size;
       y = (Math.floor(y / size) + 0.5) * size;
@@ -273,7 +271,7 @@ export class Plot<T> {
    * value is considered constant.
    */
   runs(): Array<Run<T>> {
-    const {coeffX, coeffY, domain, nodes, pixelSize} = this;
+    const {cx, cy, domain, nodes, pixelSize} = this;
     const right = domain.x + domain.width;
     const bottom = domain.y + domain.height;
     const xMin = (Math.floor(domain.x / pixelSize) + 0.5) * pixelSize;
@@ -293,17 +291,17 @@ export class Plot<T> {
       while (lastRun.xMax < xMax) {
         const rightX = lastNode.x + lastNode.size;
         const rightY = lastNode.y;
-        let node = nodes.get(coeffX * rightX + coeffY * rightY);
+        let node = nodes.get(cx * rightX + cy * rightY);
         if (!node) {
           const parentSize = lastNode.size * 2;
           const parentX = rightX + parentSize / 4;
           const parentY = (Math.floor(rightY / parentSize) + 0.5) * parentSize;
-          node = nodes.get(coeffX * parentX + coeffY * parentY)!;
+          node = nodes.get(cx * parentX + cy * parentY)!;
         } else if (!node.leaf) {
           const offset = lastNode.size / 4;
           const childX = rightX - offset;
           const childY = y > rightY ? rightY + offset : rightY - offset;
-          node = nodes.get(coeffX * childX + coeffY * childY)!;
+          node = nodes.get(cx * childX + cy * childY)!;
         }
         if (node.value === lastNode.value) {
           lastRun.xMax += node.size;
