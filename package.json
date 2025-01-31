@@ -9,6 +9,11 @@
   },
   "repository": "github:pallosp/contour_plot",
   "license": "MIT",
+  "module": "./dist/npm/index.js",
+  "types": "./dist/npm/index.d.ts",
+  "files": [
+    "dist/npm"
+  ],
   "keywords": [
     "math",
     "plot",
