@@ -1,5 +1,5 @@
 {
-  "name": "contour-plot",
+  "name": "contour-plot-svg",
   "description": "Library to evaluate and visualize functions that map Euclidean points to discrete values.",
   "sideEffects": false,
   "version": "1.0.0",
