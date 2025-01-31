@@ -2,7 +2,7 @@
   "name": "contour-plot-svg",
   "description": "Library to evaluate and visualize functions that map Euclidean points to discrete values.",
   "sideEffects": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "author": {
     "name": "Péter Pallos"
