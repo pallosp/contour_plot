@@ -21,12 +21,12 @@ export class Quadtree<T> {
 
   /**
    * Powers of 2. x*coeffX+y*coeffY are unique integers for all possible
-   * quadtree nodes in the viewport.
+   * quadtree nodes in the domain rectangle.
    */
   private coeffX = 0;
   private coeffY = 0;
 
-  private viewport: Rect = {x: 0, y: 0, width: 0, height: 0};
+  private domain: Rect = {x: 0, y: 0, width: 0, height: 0};
   private sampleSpacing = 0;
   private pixelSize = 0;
 
@@ -39,21 +39,20 @@ export class Quadtree<T> {
   constructor(readonly func: (x: number, y: number) => T) {};
 
   /**
-   * Evaluates `this.func(x, y)` at each grid point within `viewport`, spaced
-   * `sampleSpacing` apart. If neighboring points have different values, the
-   * function is refined between them at double resolution, continuing until
-   * the resolution reaches `pixelSize`.
+   * Evaluates `this.func(x, y)` at every grid point within the `domain`
+   * rectangle, spaced `sampleSpacing` apart. If neighboring points have
+   * different values, the function is refined between them at double
+   * resolution, continuing until the resolution reaches `pixelSize`.
    */
-  public compute(viewport: Rect, sampleSpacing: number, pixelSize: number):
-      this {
+  public compute(domain: Rect, sampleSpacing: number, pixelSize: number): this {
     assert(Number.isInteger(Math.log2(sampleSpacing)));
     assert(Number.isInteger(Math.log2(pixelSize)));
 
     const squareSize = Math.max(pixelSize, sampleSpacing);
-    const right = viewport.x + viewport.width;
-    const bottom = viewport.y + viewport.height;
-    const xStart = (Math.floor(viewport.x / squareSize) + 0.5) * squareSize;
-    const yStart = (Math.floor(viewport.y / squareSize) + 0.5) * squareSize;
+    const right = domain.x + domain.width;
+    const bottom = domain.y + domain.height;
+    const xStart = (Math.floor(domain.x / squareSize) + 0.5) * squareSize;
+    const yStart = (Math.floor(domain.y / squareSize) + 0.5) * squareSize;
     const xStop = (Math.ceil(right / squareSize) + 0.5) * squareSize;
     const yStop = (Math.ceil(bottom / squareSize) + 0.5) * squareSize;
 
@@ -73,7 +72,7 @@ export class Quadtree<T> {
       this.queue.push(...this.nodes.values());
     }
 
-    this.viewport = {...viewport};
+    this.domain = {...domain};
     this.sampleSpacing = sampleSpacing;
     this.pixelSize = pixelSize;
 
@@ -226,8 +225,8 @@ export class Quadtree<T> {
   }
 
   /**
-   * Returns the smallest subset of tree nodes that cover the viewport, and
-   * within each tree node the plotted function evaluates to the same value.
+   * Returns the smallest subset of tree nodes that cover the domain rectangle,
+   * and within each tree node the plotted function evaluates to the same value.
    */
   squares(): Array<Node<T>> {
     const squares: Array<Node<T>> = [];
@@ -277,11 +276,11 @@ export class Quadtree<T> {
    * value is considered constant.
    */
   runs(): Array<Run<T>> {
-    const {coeffX, coeffY, nodes, pixelSize, viewport} = this;
-    const right = viewport.x + viewport.width;
-    const bottom = viewport.y + viewport.height;
-    const xMin = (Math.floor(viewport.x / pixelSize) + 0.5) * pixelSize;
-    const yMin = (Math.floor(viewport.y / pixelSize) + 0.5) * pixelSize;
+    const {coeffX, coeffY, domain, nodes, pixelSize} = this;
+    const right = domain.x + domain.width;
+    const bottom = domain.y + domain.height;
+    const xMin = (Math.floor(domain.x / pixelSize) + 0.5) * pixelSize;
+    const yMin = (Math.floor(domain.y / pixelSize) + 0.5) * pixelSize;
     const xMax = (Math.ceil(right / pixelSize) - 0.5) * pixelSize;
     const yMax = (Math.ceil(bottom / pixelSize) - 0.5) * pixelSize;
     const runs: Array<Run<T>> = [];
