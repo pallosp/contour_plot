@@ -4,16 +4,15 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 /**
  * Renders a list of squares represented by their centers, sizes and associated
- * values as SVG <path> elements. Sets their CSS class names to
- * valueToClass(square.value). Omits the squares whose values map to null.
+ * values as SVG <path> elements. The caller can assign CSS classes or styles
+ * such as stroke color with the addStyles callback.
  *
  * To reduce the output size and the drawing time, this function will render the
  * squares with the same size and value as a single SVG path.
  */
-export function squaresToPathElements<T>(
+export function squaresToSvg<T>(
     squares: Array<Square<T>>,
-    valueToClass: (value: T) => string | null,
-    ): SVGPathElement[] {
+    addStyles: (value: T, element: SVGElement) => void): SVGPathElement[] {
   const squareMap = new Map<T, Map<number, Array<Square<T>>>>();
   for (const square of squares) {
     let squaresBySize = squareMap.get(square.value);
@@ -31,24 +30,21 @@ export function squaresToPathElements<T>(
   const pathElements: SVGPathElement[] = [];
   for (const squaresBySize of squareMap.values()) {
     for (const group of squaresBySize.values()) {
-      const className = valueToClass(group[0].value);
-      if (className != null) {
-        const path = document.createElementNS(SVG_NAMESPACE, 'path');
-        path.setAttribute('class', className);
-        path.setAttribute('d', sameSizeSquaresToSvgPath(group));
-        path.setAttribute('shape-rendering', 'crispEdges');
-        path.setAttribute('stroke-linecap', 'square');
-        if (group[0].size !== 1) {
-          path.setAttribute('transform', `scale(${group[0].size})`);
-        }
-        pathElements.push(path);
+      const path = document.createElementNS(SVG_NAMESPACE, 'path');
+      path.setAttribute('d', sameSizeSquaresToPathDef(group));
+      path.setAttribute('shape-rendering', 'crispEdges');
+      path.setAttribute('stroke-linecap', 'square');
+      if (group[0].size !== 1) {
+        path.setAttribute('transform', `scale(${group[0].size})`);
       }
+      addStyles(group[0].value, path);
+      pathElements.push(path);
     }
   }
   return pathElements;
 }
 
-function sameSizeSquaresToSvgPath<T>(squares: Array<Square<T>>): string {
+function sameSizeSquaresToPathDef<T>(squares: Array<Square<T>>): string {
   // The algorithm below implements run-length encoding, which yields ~40%
   // shorter output compared to the naive algorithm, i.e.
   // squares.map(s => `M${s.x} ${s.y}h0`).join('')
@@ -88,14 +84,13 @@ function sameSizeSquaresToSvgPath<T>(squares: Array<Square<T>>): string {
 }
 
 /**
- * Renders a list of "runs" as SVG <path> elements, one for each distinct run
- * value. Sets their CSS class names to valueToClass(run.value). Omits the runs
- * whose values map to null.
+ * Renders a list of "runs" as SVG <path> elements, one for each distinct
+ * function value. The caller can assign CSS classes or styles such as stroke
+ * color with the addStyles callback.
  */
-export function runsToPathElements<T>(
+export function runsToSvg<T>(
     runs: Array<Run<T>>,
-    valueToClass: (value: T) => string | null,
-    ): SVGPathElement[] {
+    addStyles: (value: T, element: SVGElement) => void): SVGPathElement[] {
   const scale = greatestPow2Divisor(runs[0].xMin);
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
@@ -108,16 +103,13 @@ export function runsToPathElements<T>(
   }
   const pathElements: SVGPathElement[] = [];
   for (const runs of runsByValue.values()) {
-    const className = valueToClass(runs[0].value);
-    if (className == null) continue;
-
     const path = document.createElementNS(SVG_NAMESPACE, 'path');
-    path.setAttribute('class', className);
-    path.setAttribute('d', runsToSvgPath(runs, 1 / scale));
+    path.setAttribute('d', runsToPathDef(runs, 1 / scale));
     path.setAttribute('shape-rendering', 'crispEdges');
     path.setAttribute('stroke-linecap', 'square');
     path.setAttribute('stroke-width', '1px');
     path.setAttribute('transform', `scale(${scale})`);
+    addStyles(runs[0].value, path);
     pathElements.push(path);
   }
   return pathElements;
@@ -141,7 +133,7 @@ function greatestPow2Divisor(x: number): number {
  * Translates a non-empty list of runs to an SVG path definition.
  * Multiplies all coordinates by `zoom`.
  */
-function runsToSvgPath<T>(runs: Array<Run<T>>, zoom: number): string {
+function runsToPathDef<T>(runs: Array<Run<T>>, zoom: number): string {
   let lastX = 0;
   let lastY = 0;
   const d: string[] = [];

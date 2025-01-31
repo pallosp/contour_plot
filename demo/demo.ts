@@ -1,15 +1,15 @@
-import {Quadtree} from '../src/quadtree';
-import {runsToPathElements, squaresToPathElements} from '../src/render';
+import {Quadtree, runsToSvg, squaresToSvg} from '../src';
 
 import {ViewportDragger} from './viewport_dragger';
 
-type Plot = {
-  tree: Quadtree<number>,
+type Plot<T> = {
+  tree: Quadtree<T>,
   sampleDistance: number,
-  classes: string[],
+  addStyles: (value: T, element: SVGElement) => void,
   zoom: number,
 };
-let lastPlot: Plot|undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let lastPlot: Plot<any>|undefined;
 
 const svg = document.querySelector('svg')!;
 const chart = svg.querySelector<SVGElement>('#chart')!;
@@ -33,15 +33,14 @@ function plotRandomLines() {
   }
   plotFunction({
     tree: new Quadtree(
-        (x, y) =>
-            lines.some(
-                (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3)) ?
-            0 :
-            1),
+        (x, y) => lines.some(
+            (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3))),
     sampleDistance: 1 / 2,
-    classes: ['perimeter', 'outside'],
+    addStyles: (value, el) => {
+      el.classList.add(value ? 'outside' : 'perimeter');
+    },
     zoom,
-  });
+  } as Plot<boolean>);
 }
 
 function circleAt([cx, cy, r]: [number, number, number], x: number, y: number) {
@@ -56,11 +55,12 @@ function plotRandomCircles() {
   for (let i = 0; i < 10; i++) {
     circles.push([random(-10, 10), random(-6, 6), random(0.5, 4)]);
   }
+  const classes = ['outside', 'perimeter', 'inside'];
   plotFunction({
     tree: new Quadtree(
-        (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1) + 1),
+        (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1)),
     sampleDistance: 1 / 2,
-    classes: ['outside', 'perimeter', 'inside'],
+    addStyles: (value, el) => void el.classList.add(classes[value + 1]),
     zoom,
   });
 }
@@ -81,7 +81,9 @@ function plotMandelbrot() {
   plotFunction({
     tree: new Quadtree(mandelbrot),
     sampleDistance: 1 / 2,
-    classes: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'],
+    addStyles: (value, el) => {
+      el.style.stroke = '#' + (value % 6 * 3).toString(16).repeat(3);
+    },
     zoom,
   });
 }
@@ -90,21 +92,22 @@ function plotSinCos() {
   const zoom = 64;
   vd.reset(zoom);
   plotFunction({
-    tree: new Quadtree(
-        (x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5) + 3),
+    tree: new Quadtree((x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5)),
     sampleDistance: 1,
-    classes: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'],
+    addStyles: (value, el) => {
+      el.style.stroke = '#' + ((value + 3) * 3).toString(16).repeat(3);
+    },
     zoom,
-  });
+  } as Plot<number>);
 }
 
 function roundDownToPow2(x: number): number {
   return 2 ** Math.floor(Math.log2(x));
 }
 
-function plotFunction(plot: Plot) {
+function plotFunction<T>(plot: Plot<T>) {
   lastPlot = plot;
-  let {tree, sampleDistance, classes} = plot;
+  let {tree, sampleDistance, addStyles} = plot;
   const useBlocks =
       (document.getElementById('use-blocks') as HTMLInputElement).checked;
   const viewport = vd.viewport();
@@ -121,19 +124,18 @@ function plotFunction(plot: Plot) {
   const squares = useBlocks ? tree.squares() : [];
 
   const startDraw = Date.now();
-  const valueToClass = (value: number) => classes[value];
-  const pathElements = useBlocks ?
-      squaresToPathElements(squares, valueToClass) :
-      runsToPathElements(runs, valueToClass);
+  const svgElements =
+      useBlocks ? squaresToSvg(squares, addStyles) : runsToSvg(runs, addStyles);
   if (useBlocks) {
-    for (const path of pathElements) {
-      path.setAttribute('stroke-width', '0.9px');
-      path.removeAttribute('shape-rendering');
+    // Show the edges of the building blocks.
+    for (const el of svgElements) {
+      el.setAttribute('stroke-width', '0.9px');
+      el.removeAttribute('shape-rendering');
     }
   }
   const chart = document.getElementById('chart')!;
   chart.textContent = '';
-  chart.append(...pathElements);
+  chart.append(...svgElements);
 
   const computeTime = startPostprocess - startCompute;
   const postprocessTime = startDraw - startPostprocess;
