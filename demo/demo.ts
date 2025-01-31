@@ -4,7 +4,7 @@ import {ViewportDragger} from './viewport_dragger';
 
 type Plot<T> = {
   tree: Quadtree<T>,
-  sampleDistance: number,
+  sampleSpacing: number,
   addStyles: (value: T, element: SVGElement) => void,
   zoom: number,
 };
@@ -35,7 +35,7 @@ function plotRandomLines() {
     tree: new Quadtree(
         (x, y) => lines.some(
             (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3))),
-    sampleDistance: 1 / 2,
+    sampleSpacing: 1 / 2,
     addStyles: (value, el) => {
       el.classList.add(value ? 'outside' : 'perimeter');
     },
@@ -59,7 +59,7 @@ function plotRandomCircles() {
   plotFunction({
     tree: new Quadtree(
         (x, y) => circles.reduce((acc, c) => acc * circleAt(c, x, y), 1)),
-    sampleDistance: 1 / 2,
+    sampleSpacing: 1 / 2,
     addStyles: (value, el) => void el.classList.add(classes[value + 1]),
     zoom,
   });
@@ -80,7 +80,7 @@ function plotMandelbrot() {
   vd.reset(zoom);
   plotFunction({
     tree: new Quadtree(mandelbrot),
-    sampleDistance: 1 / 2,
+    sampleSpacing: 1 / 2,
     addStyles: (value, el) => {
       el.style.stroke = '#' + (value % 6 * 3).toString(16).repeat(3);
     },
@@ -93,7 +93,7 @@ function plotSinCos() {
   vd.reset(zoom);
   plotFunction({
     tree: new Quadtree((x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5)),
-    sampleDistance: 1,
+    sampleSpacing: 1,
     addStyles: (value, el) => {
       el.style.stroke = '#' + ((value + 3) * 3).toString(16).repeat(3);
     },
@@ -107,17 +107,17 @@ function roundDownToPow2(x: number): number {
 
 function plotFunction<T>(plot: Plot<T>) {
   lastPlot = plot;
-  let {tree, sampleDistance, addStyles} = plot;
+  let {tree, sampleSpacing, addStyles} = plot;
   const useBlocks =
       (document.getElementById('use-blocks') as HTMLInputElement).checked;
   const viewport = vd.viewport();
   const pixelSizeInput =
       document.querySelector<HTMLInputElement>('#pixel-size')!;
   const pixelSize = 2 ** +pixelSizeInput.value / roundDownToPow2(vd.zoom);
-  sampleDistance = Math.max(sampleDistance, pixelSize);
+  sampleSpacing = Math.max(sampleSpacing, pixelSize);
 
   const startCompute = Date.now();
-  tree.compute(viewport, sampleDistance, pixelSize);
+  tree.compute(viewport, sampleSpacing, pixelSize);
 
   const startPostprocess = Date.now();
   const runs = useBlocks ? [] : tree.runs();
@@ -154,7 +154,7 @@ function plotFunction<T>(plot: Plot<T>) {
 }
 
 function updatePlot() {
-  lastPlot!.sampleDistance *=
+  lastPlot!.sampleSpacing *=
       roundDownToPow2(lastPlot!.zoom) / roundDownToPow2(vd.zoom);
   lastPlot!.zoom = vd.zoom;
   plotFunction(lastPlot!);

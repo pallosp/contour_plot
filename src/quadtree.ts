@@ -27,7 +27,7 @@ export class Quadtree<T> {
   private coeffY = 0;
 
   private viewport: Rect = {x: 0, y: 0, width: 0, height: 0};
-  private sampleDistance = 0;
+  private sampleSpacing = 0;
   private pixelSize = 0;
 
   /**
@@ -40,16 +40,16 @@ export class Quadtree<T> {
 
   /**
    * Evaluates `this.func(x, y)` at each grid point within `viewport`, spaced
-   * `sampleDistance` apart. If neighboring points have different values, the
+   * `sampleSpacing` apart. If neighboring points have different values, the
    * function is refined between them at double resolution, continuing until
    * the resolution reaches `pixelSize`.
    */
-  public compute(viewport: Rect, sampleDistance: number, pixelSize: number):
+  public compute(viewport: Rect, sampleSpacing: number, pixelSize: number):
       this {
-    assert(Number.isInteger(Math.log2(sampleDistance)));
+    assert(Number.isInteger(Math.log2(sampleSpacing)));
     assert(Number.isInteger(Math.log2(pixelSize)));
 
-    const squareSize = Math.max(pixelSize, sampleDistance);
+    const squareSize = Math.max(pixelSize, sampleSpacing);
     const right = viewport.x + viewport.width;
     const bottom = viewport.y + viewport.height;
     const xStart = (Math.floor(viewport.x / squareSize) + 0.5) * squareSize;
@@ -69,12 +69,12 @@ export class Quadtree<T> {
       }
     }
 
-    if (pixelSize < sampleDistance) {
+    if (pixelSize < sampleSpacing) {
       this.queue.push(...this.nodes.values());
     }
 
     this.viewport = {...viewport};
-    this.sampleDistance = sampleDistance;
+    this.sampleSpacing = sampleSpacing;
     this.pixelSize = pixelSize;
 
     this.traverse();
@@ -232,7 +232,7 @@ export class Quadtree<T> {
   squares(): Array<Node<T>> {
     const squares: Array<Node<T>> = [];
     for (const node of this.nodes.values()) {
-      if (node.size < this.sampleDistance) break;
+      if (node.size < this.sampleSpacing) break;
 
       if (this.collectSquares(node, squares) !== NON_UNIFORM) {
         squares.push(node);

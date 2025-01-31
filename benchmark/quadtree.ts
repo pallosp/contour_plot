@@ -20,7 +20,7 @@ function checkerboard(x: number, y: number): boolean {
 }
 
 const PIXEL_SIZE = 1 / 128;
-const SAMPLE_DISTANCE = 1 / 4;
+const SAMPLE_SPACING = 1 / 4;
 const viewport = {
   x: -2,
   y: 0,
@@ -31,7 +31,7 @@ const viewport = {
 const bench = new Bench({name: 'Quadtree benchmark', warmupIterations: 5});
 
 const mandelbrotTree =
-    new Quadtree(mandelbrot).compute(viewport, SAMPLE_DISTANCE, PIXEL_SIZE);
+    new Quadtree(mandelbrot).compute(viewport, SAMPLE_SPACING, PIXEL_SIZE);
 
 bench.add('Mandelbrot ∀ px', () => {
   const xMin = viewport.x + PIXEL_SIZE / 2;
@@ -45,7 +45,7 @@ bench.add('Mandelbrot ∀ px', () => {
   }
 });
 bench.add('Mandelbrot tree', () => {
-  mandelbrotTree.compute(viewport, SAMPLE_DISTANCE, PIXEL_SIZE);
+  mandelbrotTree.compute(viewport, SAMPLE_SPACING, PIXEL_SIZE);
 });
 bench.add('Mandelbrot runs', () => {
   mandelbrotTree.runs();

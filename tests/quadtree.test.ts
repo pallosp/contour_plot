@@ -57,7 +57,7 @@ test('viewport not aligned with samples', () => {
   ]);
 });
 
-test('invalid sample distance', () => {
+test('invalid sample spacing', () => {
   const tree = new Quadtree(() => 0);
   expect(() => tree.compute({x: 0, y: 0, width: 3, height: 3}, 3, 1)).toThrow();
 });
@@ -134,7 +134,7 @@ test('resolves isolated points even with low sampling rate', () => {
   expect(tree.leaves().filter(l => l.value === 0).length).toEqual(12);
 });
 
-test('tolerates when sample distance < pixel size', () => {
+test('tolerates when sample spacing < pixel size', () => {
   const tree = new Quadtree((x, y) => x === y);
   tree.compute({x: 0, y: 0, width: 2, height: 2}, 0.5, 1);
   expect(tree.leaves()).toEqual([
