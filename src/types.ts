@@ -1,14 +1,4 @@
 /**
- * Represents a rectangle area with no specific semantics.
- */
-export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/**
  * Represents a square shaped area in which the plotted function's value is
  * considered constant.
  */
@@ -37,4 +27,3 @@ export interface Run<T> {
   /** value of the plotted function over the run */
   value: T;
 }
-

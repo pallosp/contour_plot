@@ -1,4 +1,5 @@
-import {Rect, Run, Square} from './types';
+import {Rect} from './rect';
+import {Run, Square} from './types';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 

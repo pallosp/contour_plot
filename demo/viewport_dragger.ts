@@ -1,4 +1,4 @@
-import {Rect} from '../src/types';
+import {Rect} from '../src/rect';
 
 export class ViewportDragger extends EventTarget {
   private dragging = false;

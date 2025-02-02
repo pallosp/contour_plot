@@ -1,6 +1,7 @@
 import assert from 'minimalistic-assert';
 
-import {Rect, Run, Square} from './types';
+import {alignToGrid, Rect} from './rect';
+import {Run, Square} from './types';
 
 interface Node<T> extends Square<T> {
   /** True iff the square is not further subdivided. */
@@ -51,16 +52,16 @@ export class Plot<T> {
     assert(Number.isInteger(Math.log2(pixelSize)));
 
     const squareSize = Math.max(pixelSize, sampleSpacing);
-    const right = domain.x + domain.width;
-    const bottom = domain.y + domain.height;
-    const xStart = (Math.floor(domain.x / squareSize) + 0.5) * squareSize;
-    const yStart = (Math.floor(domain.y / squareSize) + 0.5) * squareSize;
-    const xStop = (Math.ceil(right / squareSize) + 0.5) * squareSize;
-    const yStop = (Math.ceil(bottom / squareSize) + 0.5) * squareSize;
+    domain = alignToGrid(domain, squareSize);
 
     this.nodes = new Map();
     this.cx = 2 / pixelSize;
-    this.cy = (xStop - xStart) / pixelSize * this.cx;
+    this.cy = domain.width / pixelSize * this.cx;
+
+    const xStart = domain.x + squareSize / 2;
+    const xStop = domain.x + domain.width;
+    const yStart = domain.y + squareSize / 2;
+    const yStop = domain.y + domain.height;
 
     for (let y = yStart; y < yStop; y += squareSize) {
       for (let x = xStart; x < xStop; x += squareSize) {
@@ -74,9 +75,9 @@ export class Plot<T> {
       this.queue.push(...this.nodes.values());
     }
 
-    this.domain = {...domain};
     this.sampleSpacing = sampleSpacing;
     this.pixelSize = pixelSize;
+    this.domain = domain;
 
     this.traverse();
     return this;
