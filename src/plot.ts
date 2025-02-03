@@ -342,12 +342,10 @@ export class Plot<T> {
    */
   runs(): Array<Run<T>> {
     const {cx, cy, domain, nodes, pixelSize} = this.state;
-    const right = domain.x + domain.width;
-    const bottom = domain.y + domain.height;
-    const xMin = (Math.floor(domain.x / pixelSize) + 0.5) * pixelSize;
-    const yMin = (Math.floor(domain.y / pixelSize) + 0.5) * pixelSize;
-    const xMax = (Math.ceil(right / pixelSize) - 0.5) * pixelSize;
-    const yMax = (Math.ceil(bottom / pixelSize) - 0.5) * pixelSize;
+    const xMin = domain.x + pixelSize / 2;
+    const yMin = domain.y + pixelSize / 2;
+    const xMax = xMin + domain.width - pixelSize;
+    const yMax = yMin + domain.height - pixelSize;
     const runs: Array<Run<T>> = [];
     for (let y = yMin; y <= yMax; y += pixelSize) {
       let lastNode = this.leafAt(xMin, y);
