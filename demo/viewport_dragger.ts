@@ -71,6 +71,7 @@ export class ViewportDragger extends EventTarget {
   private resize() {
     const w = this.mouseEl.clientWidth;
     const h = this.mouseEl.clientHeight;
+    if (w === this.width && h === this.height) return;
     this.translateX += (w - this.width) / 2;
     this.translateY += (h - this.height) / 2;
     this.width = w;
