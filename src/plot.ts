@@ -1,6 +1,6 @@
 import assert from 'minimalistic-assert';
 
-import {alignToGrid, Rect} from './rect';
+import {alignToGrid, overlappingArea, Rect} from './rect';
 import {Run, Square} from './types';
 
 interface Node<T> extends Square<T> {
@@ -21,6 +21,13 @@ interface State<T> {
   // Coefficients to map valid (x, y) points in the domain to distinct integers
   readonly cx: number;
   readonly cy: number;
+}
+
+export interface ComputeStats {
+  size: number;
+  deltaSize: number;
+  affectedPixels: number;
+  elapsedMs: number;
 }
 
 function createState<T>(
@@ -48,6 +55,8 @@ const NON_UNIFORM = Symbol();
 
 export class Plot<T> {
   private state = EMPTY_STATE as State<T>;
+  private stats:
+      ComputeStats = {size: 0, deltaSize: 0, affectedPixels: 0, elapsedMs: 0};
 
   /**
    * LIFO queue of quadtree nodes for which the plotted function's value has
@@ -65,15 +74,38 @@ export class Plot<T> {
    * resolution, continuing until the resolution reaches `pixelSize`.
    */
   public compute(domain: Rect, sampleSpacing: number, pixelSize: number): this {
+    const startTime = performance.now();
+    const prevState = this.state;
     const state = createState<T>(domain, sampleSpacing, pixelSize);
     domain = state.domain;
     sampleSpacing = state.sampleSpacing;
 
-    const shouldEnqueue = pixelSize < sampleSpacing;
-    this.computeGrid(state, shouldEnqueue);
+    const reuse = sampleSpacing === prevState.sampleSpacing &&
+        pixelSize === prevState.pixelSize &&
+        overlappingArea(domain, prevState.domain) ===
+            domain.width * domain.height;
+    let prevSize = 0;
+    let reusedArea = 0;
+    if (reuse) {
+      this.copyFiltered(prevState.nodes, state);
+      if (pixelSize === prevState.pixelSize) {
+        reusedArea = overlappingArea(domain, prevState.domain);
+      }
+      prevSize = state.nodes.size;
+    } else {
+      const shouldEnqueue = pixelSize < sampleSpacing;
+      this.computeGrid(state, shouldEnqueue);
+    }
 
     this.state = state;
     this.traverse();
+
+    this.stats.size = state.nodes.size;
+    this.stats.deltaSize = state.nodes.size - prevSize;
+    this.stats.affectedPixels =
+        (domain.width * domain.height - reusedArea) / pixelSize ** 2;
+    this.stats.elapsedMs = performance.now() - startTime;
+
     return this;
   }
 
@@ -96,6 +128,24 @@ export class Plot<T> {
         const node = {x, y, size: sampleSpacing, value: func(x, y), leaf: true};
         nodes.set(key, node);
         if (enqueue) queue.push(node);
+      }
+    }
+  }
+
+  /**
+   * Copies the nodes that meet the constraints of `state` from `sourceNodes`
+   * to `state.nodes`.
+   */
+  private copyFiltered(sourceNodes: Map<number, Node<T>>, state: State<T>) {
+    const {nodes, domain, sampleSpacing, pixelSize, cx, cy} = state;
+    const {x, y} = domain;
+    const right = x + domain.width;
+    const bottom = y + domain.height;
+
+    for (const node of sourceNodes.values()) {
+      if (node.x > x && node.x < right && node.y > y && node.y < bottom &&
+          node.size >= pixelSize && node.size <= sampleSpacing) {
+        nodes.set(node.x * cx + node.y * cy, node);
       }
     }
   }
@@ -267,11 +317,10 @@ export class Plot<T> {
   }
 
   /**
-   * Number of nodes in the underlying quadtree. It's equal to the number of
-   * evaluations of the plotted function.
+   * Statistics about the last computation.
    */
-  size(): number {
-    return this.state.nodes.size;
+  computeStats(): ComputeStats {
+    return this.stats;
   }
 
   private leafAt(x: number, y: number): Node<T> {

@@ -117,8 +117,8 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const pixelSize = 2 ** +pixelSizeInput.value / roundDownToPow2(vd.zoom);
   sampleSpacing = Math.max(sampleSpacing, pixelSize);
 
-  const startCompute = Date.now();
   plot.compute(viewport, sampleSpacing, pixelSize);
+  const computeStats = plot.computeStats();
 
   const startPostprocess = Date.now();
   const runs = useBlocks ? [] : plot.runs();
@@ -138,20 +138,22 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   chart.textContent = '';
   chart.append(...svgElements);
 
-  const computeTime = startPostprocess - startCompute;
+  const computeTime = computeStats.elapsedMs;
   const postprocessTime = startDraw - startPostprocess;
   const renderTime = Date.now() - startDraw;
-  const evalCount = plot.size();
+  const evalCount = computeStats.deltaSize;
   const rectCount = squares.length + runs.length;
-  const pixelCount = viewport.width * viewport.height / pixelSize ** 2;
-  const pixelPerEval = Math.round(pixelCount * 10 / evalCount) / 10;
+  const pixelPerEval =
+      Math.round(computeStats.affectedPixels * 10 / evalCount) / 10;
   const svgSize = Math.round(chart.innerHTML.length / 1024);
-  document.querySelector('.time')!.textContent =
-      `Computed f(x,y) ${evalCount} times, once for every ${
-          pixelPerEval} pixels in ${computeTime} ms. ` +
-      `Built ${rectCount} rectangles in
+  if (computeStats.deltaSize > 0) {
+    document.querySelector('.time')!.textContent =
+        `Computed f(x,y) ${evalCount} times, once for every ${
+            pixelPerEval} pixels in ${Math.round(computeTime)} ms. ` +
+        `Built ${rectCount} rectangles in
       ${postprocessTime} ms and rendered them in ${renderTime} ms. ` +
-      `SVG size: ${svgSize} KiB`;
+        `SVG size: ${svgSize} KiB`;
+  }
 }
 
 function updatePlot() {
