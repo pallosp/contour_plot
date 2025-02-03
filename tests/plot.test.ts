@@ -174,6 +174,8 @@ test('recomputing with different viewport and resolution', () => {
   ]);
 });
 
+// ·██·
+// ····
 test('runs from same size squares', () => {
   const plot = new Plot((x, y) => x > 1 && x < 3 && y < 1);
   plot.compute({x: 0, y: 0, width: 4, height: 2}, 1, 1);
@@ -182,6 +184,21 @@ test('runs from same size squares', () => {
     {xMin: 1.5, xMax: 2.5, y: 0.5, value: true},
     {xMin: 3.5, xMax: 3.5, y: 0.5, value: false},
     {xMin: 0.5, xMax: 3.5, y: 1.5, value: false},
+  ]);
+});
+
+// ··████··
+// ··████··
+// ········
+// ········
+test('runs with pixel size > 1', () => {
+  const plot = new Plot((x, y) => x > 2 && x < 6 && y < 2);
+  plot.compute({x: 0, y: 0, width: 8, height: 4}, 2, 2);
+  expect(plot.runs()).toEqual([
+    {xMin: 1, xMax: 1, y: 1, value: false},
+    {xMin: 3, xMax: 5, y: 1, value: true},
+    {xMin: 7, xMax: 7, y: 1, value: false},
+    {xMin: 1, xMax: 7, y: 3, value: false},
   ]);
 });
 
