@@ -96,7 +96,7 @@ export class Plot<T> {
 
   private addChildren(x: number, y: number, size: number) {
     const func = this.func;
-    const {cx, cy, nodes, pixelSize} = this.state;
+    const {cx, cy, nodes} = this.state;
     x -= size / 4;
     y -= size / 4;
     size /= 2;
@@ -120,9 +120,7 @@ export class Plot<T> {
     const leaf4 = {x, y, size, value: func(x, y), leaf: true};
     nodes.set(key, leaf4);
 
-    if (size >= pixelSize) {
-      this.queue.push(leaf1, leaf2, leaf3, leaf4);
-    }
+    this.queue.push(leaf1, leaf2, leaf3, leaf4);
   }
 
   /**
