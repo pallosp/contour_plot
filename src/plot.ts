@@ -384,7 +384,6 @@ export class Plot<T> {
         }
         lastNode = node;
       }
-      lastRun.xMax = xMax;
     }
     return runs;
   }
