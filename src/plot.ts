@@ -66,32 +66,38 @@ export class Plot<T> {
    */
   public compute(domain: Rect, sampleSpacing: number, pixelSize: number): this {
     const state = createState<T>(domain, sampleSpacing, pixelSize);
-
-    const {nodes, cx, cy} = state;
     domain = state.domain;
     sampleSpacing = state.sampleSpacing;
+
+    const shouldEnqueue = pixelSize < sampleSpacing;
+    this.computeGrid(state, shouldEnqueue);
+
+    this.state = state;
+    this.traverse();
+    return this;
+  }
+
+  /**
+   * Computes the function at the grid points `state.sampleSpacing` apart.
+   * Optionally adds the created quadtree nodes to the traversal queue.
+   */
+  private computeGrid(state: State<T>, enqueue: boolean) {
+    const {nodes, domain, sampleSpacing, cx, cy} = state;
+    const {func, queue} = this;
 
     const xStart = domain.x + sampleSpacing / 2;
     const xStop = domain.x + domain.width;
     const yStart = domain.y + sampleSpacing / 2;
     const yStop = domain.y + domain.height;
 
-    const func = this.func;
     for (let y = yStart; y < yStop; y += sampleSpacing) {
       for (let x = xStart; x < xStop; x += sampleSpacing) {
         const key = cx * x + cy * y;
-        nodes.set(
-            key, {x, y, size: sampleSpacing, value: func(x, y), leaf: true});
+        const node = {x, y, size: sampleSpacing, value: func(x, y), leaf: true};
+        nodes.set(key, node);
+        if (enqueue) queue.push(node);
       }
     }
-
-    if (pixelSize < sampleSpacing) {
-      this.queue.push(...nodes.values());
-    }
-
-    this.state = state;
-    this.traverse();
-    return this;
   }
 
   private addChildren(x: number, y: number, size: number) {
