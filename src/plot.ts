@@ -8,6 +8,31 @@ interface Node<T> extends Square<T> {
   leaf: boolean;
 }
 
+/** Plot state. */
+interface State<T> {
+  // Nodes of the underlying quadtree, keyed by x * cx + y * cy
+  readonly nodes: Map<number, Node<T>>;
+  // Domain rectangle aligned to a multiple of sampleSpacing
+  readonly domain: Rect;
+  // Initial density of the points to evaluate.
+  readonly sampleSpacing: number;
+  // Maximum density of the points to evaluate.
+  readonly pixelSize: number;
+  // Coefficients to map valid (x, y) points in the domain to distinct integers
+  readonly cx: number;
+  readonly cy: number;
+}
+
+const EMPTY_STATE: State<unknown> = {
+  // Nodes of the underlying quadtree, keyed by x * cx + y * cy.
+  nodes: new Map(),
+  domain: {x: 0, y: 0, width: 0, height: 0},
+  sampleSpacing: 0,
+  pixelSize: 0,
+  cx: 0,
+  cy: 0
+}
+
 /**
  * A special value assigned to tree nodes where the function is known to take at
  * least two distinct values within the node's area.
@@ -15,22 +40,7 @@ interface Node<T> extends Square<T> {
 const NON_UNIFORM = Symbol();
 
 export class Plot<T> {
-  /**
-   * Nodes of the underlying quadtree, keyed by x * cx + y * cy.
-   */
-  private nodes = new Map<number, Node<T>>();
-
-  /**
-   * Coefficients to map valid (x, y) coordinates in the domain rectangle to
-   * unique integers.
-   */
-  private cx = 0;
-  private cy = 0;
-
-  /** Rectangle in which this.func was last evaluated. */
-  private domain: Rect = {x: 0, y: 0, width: 0, height: 0};
-  private sampleSpacing = 0;
-  private pixelSize = 0;
+  private state = EMPTY_STATE as State<T>;
 
   /**
    * LIFO queue of quadtree nodes for which the plotted function's value has
@@ -54,9 +64,10 @@ export class Plot<T> {
     const squareSize = Math.max(pixelSize, sampleSpacing);
     domain = alignToGrid(domain, squareSize);
 
-    this.nodes = new Map();
-    this.cx = 2 / pixelSize;
-    this.cy = domain.width / pixelSize * this.cx;
+    const nodes = new Map();
+    const cx = 2 / pixelSize;
+    const cy = domain.width / pixelSize * cx;
+    const func = this.func;
 
     const xStart = domain.x + squareSize / 2;
     const xStop = domain.x + domain.width;
@@ -65,26 +76,24 @@ export class Plot<T> {
 
     for (let y = yStart; y < yStop; y += squareSize) {
       for (let x = xStart; x < xStop; x += squareSize) {
-        const key = this.cx * x + this.cy * y;
-        this.nodes.set(
-            key, {x, y, size: squareSize, value: this.func(x, y), leaf: true});
+        const key = cx * x + cy * y;
+        nodes.set(key, {x, y, size: squareSize, value: func(x, y), leaf: true});
       }
     }
 
     if (pixelSize < sampleSpacing) {
-      this.queue.push(...this.nodes.values());
+      this.queue.push(...nodes.values());
     }
 
-    this.sampleSpacing = sampleSpacing;
-    this.pixelSize = pixelSize;
-    this.domain = domain;
+    this.state = {nodes, domain, sampleSpacing, pixelSize, cx, cy};
 
     this.traverse();
     return this;
   }
 
   private addChildren(x: number, y: number, size: number) {
-    const {cx, cy, func, nodes} = this;
+    const func = this.func;
+    const {cx, cy, nodes, pixelSize} = this.state;
     x -= size / 4;
     y -= size / 4;
     size /= 2;
@@ -108,7 +117,7 @@ export class Plot<T> {
     const leaf4 = {x, y, size, value: func(x, y), leaf: true};
     nodes.set(key, leaf4);
 
-    if (size >= this.pixelSize) {
+    if (size >= pixelSize) {
       this.queue.push(leaf1, leaf2, leaf3, leaf4);
     }
   }
@@ -119,14 +128,15 @@ export class Plot<T> {
    */
   private subdivideLeaf(node: Node<T>) {
     const {x, y, size} = node;
+    const state = this.state;
     node.leaf = false;
 
     const parentSize = size * 2;
     const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
     const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
-    const parentKey = this.cx * parentX + this.cy * parentY;
-    const xNeighbor = this.nodes.get(parentKey + 4 * (x - parentX) * this.cx);
-    const yNeighbor = this.nodes.get(parentKey + 4 * (y - parentY) * this.cy);
+    const parentKey = state.cx * parentX + state.cy * parentY;
+    const xNeighbor = state.nodes.get(parentKey + 4 * (x - parentX) * state.cx);
+    const yNeighbor = state.nodes.get(parentKey + 4 * (y - parentY) * state.cy);
 
     if (xNeighbor?.leaf) this.subdivideLeaf(xNeighbor);
     if (yNeighbor?.leaf) this.subdivideLeaf(yNeighbor);
@@ -139,7 +149,8 @@ export class Plot<T> {
    * its neighbors, subdivides it as well as the different neighbors.
    */
   private traverse() {
-    const {cx, cy, nodes, pixelSize, queue} = this;
+    const queue = this.queue;
+    const {cx, cy, nodes, pixelSize} = this.state;
     let node: Node<T>|undefined;
     while ((node = queue.pop())) {
       if (!node.leaf) continue;
@@ -204,7 +215,7 @@ export class Plot<T> {
     }
     const {x, y, size} = node;
     const childRadius = size / 4;
-    const {cx, cy, nodes} = this;
+    const {cx, cy, nodes} = this.state;
     const key = cx * x + cy * y;
     const child1 = nodes.get(key + childRadius * (cx + cy))!;
     const child2 = nodes.get(key + childRadius * (cx - cy))!;
@@ -232,15 +243,16 @@ export class Plot<T> {
    */
   squares(compress = true): Array<Square<T>> {
     const squares: Array<Square<T>> = [];
+    const {nodes, sampleSpacing} = this.state;
     if (compress) {
-      for (const node of this.nodes.values()) {
-        if (node.size < this.sampleSpacing) break;
+      for (const node of nodes.values()) {
+        if (node.size < sampleSpacing) break;
         if (this.collectSquares(node, squares) !== NON_UNIFORM) {
           squares.push(node);
         }
       }
     } else {
-      for (const node of this.nodes.values()) {
+      for (const node of nodes.values()) {
         if (node.leaf) squares.push(node);
       }
     }
@@ -252,13 +264,14 @@ export class Plot<T> {
    * evaluations of the plotted function.
    */
   size(): number {
-    return this.nodes.size;
+    return this.state.nodes.size;
   }
 
   private leafAt(x: number, y: number): Node<T> {
     let node: Node<T>|undefined;
-    let size = this.pixelSize;
-    while (!(node = this.nodes.get(this.cx * x + this.cy * y))) {
+    const state = this.state;
+    let size = state.pixelSize;
+    while (!(node = state.nodes.get(state.cx * x + state.cy * y))) {
       size *= 2;
       x = (Math.floor(x / size) + 0.5) * size;
       y = (Math.floor(y / size) + 0.5) * size;
@@ -272,7 +285,7 @@ export class Plot<T> {
    * value is considered constant.
    */
   runs(): Array<Run<T>> {
-    const {cx, cy, domain, nodes, pixelSize} = this;
+    const {cx, cy, domain, nodes, pixelSize} = this.state;
     const right = domain.x + domain.width;
     const bottom = domain.y + domain.height;
     const xMin = (Math.floor(domain.x / pixelSize) + 0.5) * pixelSize;
