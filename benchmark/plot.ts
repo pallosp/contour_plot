@@ -57,18 +57,15 @@ bench.add('Mandelbrot runs', () => {
   mandelbrotPlot.runs();
 });
 
-const checkerboardPlot = new Plot(
-    (x, y) => x === y || Math.clz32(x - y & y - x) + 1 < Math.clz32(x & -x));
-
-bench.add('Checkers eval ∀ px', () => {
+bench.add('Checkerboard eval ∀ px', () => {
   for (let y = 1; y < 128; y += 2) {
     for (let x = 1; x < 128; x += 2) {
       checkerboard(x, y);
     }
   }
 });
-bench.add('Checkers compute', () => {
-  checkerboardPlot.compute({x: 0, y: 0, width: 128, height: 128}, 16, 2);
+bench.add('Checkerboard compute', () => {
+  new Plot(checkerboard).compute({x: 0, y: 0, width: 128, height: 128}, 16, 2);
 });
 
 await bench.run();
