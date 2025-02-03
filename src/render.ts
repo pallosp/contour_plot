@@ -45,17 +45,17 @@ export function squaresToSvg<T>(
   return pathElements;
 }
 
-function sameSizeSquaresToPathDef<T>(squares: Array<Square<T>>): string {
+function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
   // The algorithm below implements run-length encoding, which yields ~40%
   // shorter output compared to the naive algorithm, i.e.
   // squares.map(s => `M${s.x} ${s.y}h0`).join('')
   const size = squares[0].size;
   const scale = 1 / size;
   const d: string[] = [];
-  let last: Square<T> = {} as Square<T>;
+  let last = {} as Square<unknown>;
   let h = 0;
   squares.sort((s1, s2) => s1.y - s2.y || s1.x - s2.x);
-  squares.push({} as Square<T>);
+  squares.push({} as Square<unknown>);
   for (const square of squares) {
     if (square.y === last.y) {
       if (square.x === last.x + size) {
@@ -134,7 +134,7 @@ function greatestPow2Divisor(x: number): number {
  * Translates a non-empty list of runs to an SVG path definition.
  * Multiplies all coordinates by `zoom`.
  */
-function runsToPathDef<T>(runs: Array<Run<T>>, zoom: number): string {
+function runsToPathDef(runs: Array<Run<unknown>>, zoom: number): string {
   let lastX = 0;
   let lastY = 0;
   const d: string[] = [];
