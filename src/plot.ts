@@ -23,15 +23,22 @@ interface State<T> {
   readonly cy: number;
 }
 
-const EMPTY_STATE: State<unknown> = {
-  // Nodes of the underlying quadtree, keyed by x * cx + y * cy.
-  nodes: new Map(),
-  domain: {x: 0, y: 0, width: 0, height: 0},
-  sampleSpacing: 0,
-  pixelSize: 0,
-  cx: 0,
-  cy: 0
+function createState<T>(
+    domain: Rect, sampleSpacing: number, pixelSize: number): State<T> {
+  assert(Number.isInteger(Math.log2(sampleSpacing)));
+  assert(Number.isInteger(Math.log2(pixelSize)));
+
+  sampleSpacing = Math.max(pixelSize, sampleSpacing);
+  domain = alignToGrid(domain, sampleSpacing);
+  const nodes = new Map<number, Node<T>>();
+  const cx = 2 / pixelSize;
+  const cy = domain.width / pixelSize * cx;
+
+  return {nodes, domain, sampleSpacing, pixelSize, cx, cy};
 }
+
+const EMPTY_STATE: State<unknown> =
+    createState({x: 0, y: 0, width: 0, height: 0}, 1, 1);
 
 /**
  * A special value assigned to tree nodes where the function is known to take at
@@ -58,26 +65,23 @@ export class Plot<T> {
    * resolution, continuing until the resolution reaches `pixelSize`.
    */
   public compute(domain: Rect, sampleSpacing: number, pixelSize: number): this {
-    assert(Number.isInteger(Math.log2(sampleSpacing)));
-    assert(Number.isInteger(Math.log2(pixelSize)));
+    const state = createState<T>(domain, sampleSpacing, pixelSize);
 
-    const squareSize = Math.max(pixelSize, sampleSpacing);
-    domain = alignToGrid(domain, squareSize);
+    const {nodes, cx, cy} = state;
+    domain = state.domain;
+    sampleSpacing = state.sampleSpacing;
 
-    const nodes = new Map();
-    const cx = 2 / pixelSize;
-    const cy = domain.width / pixelSize * cx;
-    const func = this.func;
-
-    const xStart = domain.x + squareSize / 2;
+    const xStart = domain.x + sampleSpacing / 2;
     const xStop = domain.x + domain.width;
-    const yStart = domain.y + squareSize / 2;
+    const yStart = domain.y + sampleSpacing / 2;
     const yStop = domain.y + domain.height;
 
-    for (let y = yStart; y < yStop; y += squareSize) {
-      for (let x = xStart; x < xStop; x += squareSize) {
+    const func = this.func;
+    for (let y = yStart; y < yStop; y += sampleSpacing) {
+      for (let x = xStart; x < xStop; x += sampleSpacing) {
         const key = cx * x + cy * y;
-        nodes.set(key, {x, y, size: squareSize, value: func(x, y), leaf: true});
+        nodes.set(
+            key, {x, y, size: sampleSpacing, value: func(x, y), leaf: true});
       }
     }
 
@@ -85,8 +89,7 @@ export class Plot<T> {
       this.queue.push(...nodes.values());
     }
 
-    this.state = {nodes, domain, sampleSpacing, pixelSize, cx, cy};
-
+    this.state = state;
     this.traverse();
     return this;
   }
