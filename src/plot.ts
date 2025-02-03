@@ -342,20 +342,23 @@ export class Plot<T> {
    */
   runs(): Array<Run<T>> {
     const {cx, cy, domain, nodes, pixelSize} = this.state;
-    const xMin = domain.x + pixelSize / 2;
-    const yMin = domain.y + pixelSize / 2;
-    const xMax = xMin + domain.width - pixelSize;
-    const yMax = yMin + domain.height - pixelSize;
+
+    const xMin = domain.x;
+    const yMin = domain.y;
+    const xMax = xMin + domain.width;
+    const yMax = yMin + domain.height;
     const runs: Array<Run<T>> = [];
-    for (let y = yMin; y <= yMax; y += pixelSize) {
-      let lastNode = this.leafAt(xMin, y);
+
+    for (let y = yMin + pixelSize / 2; y < yMax; y += pixelSize) {
+      let lastNode = this.leafAt(xMin + pixelSize / 2, y);
       let lastRun: Run<T> = {
         xMin,
-        xMax: lastNode.x + (lastNode.size - pixelSize) / 2,
+        xMax: xMin + lastNode.size,
         y,
         value: lastNode.value,
       };
       runs.push(lastRun);
+
       while (lastRun.xMax < xMax) {
         const rightX = lastNode.x + lastNode.size;
         const rightY = lastNode.y;
@@ -371,11 +374,12 @@ export class Plot<T> {
           const childY = y > rightY ? rightY + offset : rightY - offset;
           node = nodes.get(cx * childX + cy * childY)!;
         }
+
         if (node.value === lastNode.value) {
           lastRun.xMax += node.size;
         } else {
           lastRun = {
-            xMin: lastRun.xMax + pixelSize,
+            xMin: lastRun.xMax,
             xMax: lastRun.xMax + node.size,
             y,
             value: node.value,
@@ -385,6 +389,7 @@ export class Plot<T> {
         lastNode = node;
       }
     }
+
     return runs;
   }
 }

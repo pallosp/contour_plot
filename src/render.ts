@@ -92,7 +92,7 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
 export function runsToSvg<T>(
     runs: Array<Run<T>>,
     addStyles: (value: T, element: SVGElement) => void): SVGPathElement[] {
-  const scale = greatestPow2Divisor(runs[0].xMin);
+  const scale = greatestPow2Divisor(runs[0].y);
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
     const sameValueRuns = runsByValue.get(run.value);
@@ -107,7 +107,6 @@ export function runsToSvg<T>(
     const path = document.createElementNS(SVG_NAMESPACE, 'path');
     path.setAttribute('d', runsToPathDef(runs, 1 / scale));
     path.setAttribute('shape-rendering', 'crispEdges');
-    path.setAttribute('stroke-linecap', 'square');
     path.setAttribute('stroke-width', '1px');
     path.setAttribute('transform', `scale(${scale})`);
     addStyles(runs[0].value, path);
