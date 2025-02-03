@@ -47,6 +47,12 @@ bench.add('Mandelbrot eval ∀ px', () => {
 bench.add('Mandelbrot compute', () => {
   mandelbrotPlot.compute(viewport, SAMPLE_SPACING, PIXEL_SIZE);
 });
+bench.add('Mandelbrot all □', () => {
+  mandelbrotPlot.squares(/* compress= */ false);
+});
+bench.add('Mandelbrot compressed □', () => {
+  mandelbrotPlot.squares(/* compress= */ true);
+});
 bench.add('Mandelbrot runs', () => {
   mandelbrotPlot.runs();
 });
