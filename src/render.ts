@@ -85,13 +85,17 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
 }
 
 /**
- * Renders a list of "runs" as SVG <path> elements, one for each distinct
- * function value. The caller can assign CSS classes or styles such as stroke
- * color with the addStyles callback.
+ * Renders a list of "runs" as SVG <path> elements.
+ *
+ * Generates separate paths for distinct function values and segments them into
+ * 64-pixel-tall horizontal stripes. This segmentation improves performance by
+ * preventing overly complex paths that could slow down mouse interactions like
+ * panning. The caller can customize styling, such as stroke color, using the
+ * addStyles callback.
  */
 export function runsToSvg<T>(
     runs: Array<Run<T>>,
-    addStyles: (value: T, element: SVGElement) => void): SVGPathElement[] {
+    addStyles: (value: T, element: SVGElement) => void): SVGElement[] {
   const scale = greatestPow2Divisor(runs[0].y);
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
@@ -102,17 +106,21 @@ export function runsToSvg<T>(
       runsByValue.set(run.value, [run]);
     }
   }
-  const pathElements: SVGPathElement[] = [];
+  const svgElements: SVGElement[] = [];
   for (const runs of runsByValue.values()) {
-    const path = document.createElementNS(SVG_NAMESPACE, 'path');
-    path.setAttribute('d', runsToPathDef(runs, 1 / scale));
-    path.setAttribute('shape-rendering', 'crispEdges');
-    path.setAttribute('stroke-width', '1px');
-    path.setAttribute('transform', `scale(${scale})`);
-    addStyles(runs[0].value, path);
-    pathElements.push(path);
+    const g = document.createElementNS(SVG_NAMESPACE, 'g');
+    g.setAttribute('shape-rendering', 'crispEdges');
+    g.setAttribute('stroke-width', '1px');
+    g.setAttribute('transform', `scale(${scale})`);
+    addStyles(runs[0].value, g);
+    for (const d of runsToPathDefs(runs, 1 / scale)) {
+      const path = document.createElementNS(SVG_NAMESPACE, 'path');
+      path.setAttribute('d', d);
+      g.append(path);
+    }
+    svgElements.push(g);
   }
-  return pathElements;
+  return svgElements;
 }
 
 /** Returns the greatest 2ⁿ (n ∈ ℤ) for which x / 2ⁿ is an integer. */
@@ -133,15 +141,26 @@ function greatestPow2Divisor(x: number): number {
  * Translates a non-empty list of runs to an SVG path definition.
  * Multiplies all coordinates by `zoom`.
  */
-function runsToPathDef(runs: Array<Run<unknown>>, zoom: number): string {
+function runsToPathDefs(runs: Array<Run<unknown>>, zoom: number): string[] {
   let lastX = 0;
   let lastY = 0;
-  const d: string[] = [];
+  let rows = 0;
+  const pathDefs: string[] = [];
+  let d: string[] = [];
   for (const run of runs) {
     if (run.xMax === lastX) {
       d.push(`m0 ${(run.y - lastY) * zoom}h${(run.xMin - run.xMax) * zoom}`);
       lastX = run.xMin;
     } else {
+      if (run.y > lastY) {
+        if ((++rows) % 64 === 0) {
+          d[0] = 'M' + d[0].substring(1);
+          pathDefs.push(d.join(''));
+          d = [];
+          lastX = 0;
+          lastY = 0;
+        }
+      }
       d.push(
           `m${(run.xMin - lastX) * zoom} ${(run.y - lastY) * zoom}h${
               (run.xMax - run.xMin) * zoom}`,
@@ -151,7 +170,8 @@ function runsToPathDef(runs: Array<Run<unknown>>, zoom: number): string {
     lastY = run.y;
   }
   d[0] = 'M' + d[0].substring(1);
-  return d.join('');
+  pathDefs.push(d.join(''));
+  return pathDefs;
 }
 
 function createBitmap<T>(width: number, height: number): Array<Array<T>> {
