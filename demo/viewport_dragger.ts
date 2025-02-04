@@ -31,7 +31,7 @@ export class ViewportDragger extends EventTarget {
     if (e.button !== 0) return;
     e.preventDefault();  // Don't select nearby text while panning.
     this.dragging = true;
-    this.mouseEl.addEventListener('mousemove', this.mouseMoveListener);
+    window.addEventListener('mousemove', this.mouseMoveListener);
     window.addEventListener('mouseup', this.mouseUpListener);
     this.lastX = e.x;
     this.lastY = e.y;
@@ -50,7 +50,7 @@ export class ViewportDragger extends EventTarget {
 
   private mouseUp() {
     this.dragging = false;
-    this.mouseEl.removeEventListener('mousemove', this.mouseMoveListener);
+    window.removeEventListener('mousemove', this.mouseMoveListener);
     window.removeEventListener('mouseup', this.mouseUpListener);
   }
 
