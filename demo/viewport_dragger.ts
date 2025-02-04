@@ -6,9 +6,9 @@ export class ViewportDragger extends EventTarget {
   private lastY = 0;
   private translateX = 0;
   private translateY = 0;
-  private throttleTimer = 0;
   private width: number;
   private height: number;
+  private debounceFrames = 0;
 
   private readonly mouseMoveListener = (e: Event) =>
       this.mouseMove(e as MouseEvent);
@@ -86,13 +86,16 @@ export class ViewportDragger extends EventTarget {
   }
 
   private dispatchChange() {
-    if (this.throttleTimer) {
-      window.clearTimeout(this.throttleTimer);
-    }
-    this.throttleTimer = window.setTimeout(() => {
-      this.throttleTimer = 0;
-      this.dispatchEvent(new Event('change'));
-    }, 35);
+    const callback = () => {
+      if (--this.debounceFrames > 0) {
+        requestAnimationFrame(callback);
+      } else {
+        this.dispatchEvent(new Event('change'));
+      }
+    };
+    const prevFrames = this.debounceFrames;
+    this.debounceFrames = 3;
+    if (prevFrames === 0) callback();
   }
 
   public viewport(): Rect {
