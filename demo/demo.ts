@@ -10,6 +10,7 @@ type PlotParams<T> = {
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let lastPlotParams: PlotParams<any>|undefined;
+let lastUseBlocks = false;
 
 const svg = document.querySelector('svg')!;
 const chart = svg.querySelector<SVGElement>('#chart')!;
@@ -107,7 +108,6 @@ function roundDownToPow2(x: number): number {
 }
 
 function plotFunction<T>(plotParams: PlotParams<T>) {
-  lastPlotParams = plotParams;
   let {plot, sampleSpacing, addStyles} = plotParams;
   const useBlocks =
       (document.getElementById('use-blocks') as HTMLInputElement).checked;
@@ -146,14 +146,21 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const pixelPerEval =
       Math.round(computeStats.affectedPixels * 10 / evalCount) / 10;
   const svgSize = Math.round(chart.innerHTML.length / 1024);
-  if (computeStats.deltaSize > 0) {
-    document.querySelector('.time')!.textContent =
+
+  if (computeStats.deltaSize > 0 || useBlocks != lastUseBlocks) {
+    const computeStatsText = computeStats.deltaSize > 0 ?
         `Computed f(x,y) ${evalCount} times, once for every ${
-            pixelPerEval} pixels in ${Math.round(computeTime)} ms. ` +
-        `Built ${rectCount} rectangles in
-      ${postprocessTime} ms and rendered them in ${renderTime} ms. ` +
-        `SVG size: ${svgSize} KiB`;
+            pixelPerEval} pixels in ${Math.round(computeTime)} ms. ` :
+        '';
+    const renderStatsText = `Built ${rectCount} rectangles in ${
+        postprocessTime} ms and drawn them in ${renderTime} ms. `;
+    const svgStatsText = `SVG size: ${svgSize} KiB`;
+    document.querySelector('#plot-stats')!.textContent =
+        computeStatsText + renderStatsText + svgStatsText;
   }
+
+  lastPlotParams = plotParams;
+  lastUseBlocks = useBlocks;
 }
 
 function updatePlot() {
