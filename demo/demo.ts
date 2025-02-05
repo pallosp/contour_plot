@@ -3,6 +3,7 @@ import {Plot, runsToSvg, squaresToSvg} from '../src';
 import {ViewportDragger} from './viewport_dragger';
 
 type PlotParams<T> = {
+  name: string,
   plot: Plot<T>,
   sampleSpacing: number,
   addStyles: (value: T, element: SVGElement) => void,
@@ -15,6 +16,13 @@ let lastUseBlocks = false;
 const svg = document.querySelector('svg')!;
 const chart = svg.querySelector<SVGElement>('#chart')!;
 const vd = new ViewportDragger(svg, chart, 1);
+
+const plotters: {[key: string]: () => void} = {
+  'random-lines': plotRandomLines,
+  'random-circles': plotRandomCircles,
+  'mandelbrot-set': plotMandelbrot,
+  'sin-cos': plotSinCos
+};
 
 function random(min: number, max: number): number {
   return Math.random() * (max - min + 1) + min;
@@ -33,6 +41,7 @@ function plotRandomLines() {
     lines.push([random(-5, 5), random(-5, 5), random(-25, 25)]);
   }
   plotFunction({
+    name: 'random-lines',
     plot: new Plot(
         (x, y) => lines.some(
             (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3))),
@@ -58,6 +67,7 @@ function plotRandomCircles() {
   }
   const classes = ['outside', 'perimeter', 'inside'];
   plotFunction({
+    name: 'random-circles',
     plot: new Plot(
         (x: number, y: number) =>
             circles.reduce((acc, c) => acc * circleAt(c, x, y), 1)),
@@ -81,6 +91,7 @@ function plotMandelbrot() {
   const zoom = 256;
   vd.reset(zoom);
   plotFunction({
+    name: 'mandelbrot-set',
     plot: new Plot(mandelbrot),
     sampleSpacing: 1 / 2,
     addStyles: (value, el) => {
@@ -94,6 +105,7 @@ function plotSinCos() {
   const zoom = 64;
   vd.reset(zoom);
   plotFunction({
+    name: 'sin-cos',
     plot: new Plot((x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5)),
     sampleSpacing: 1,
     addStyles: (value, el) => {
@@ -108,7 +120,8 @@ function roundDownToPow2(x: number): number {
 }
 
 function plotFunction<T>(plotParams: PlotParams<T>) {
-  let {plot, sampleSpacing, addStyles} = plotParams;
+  let {name, plot, sampleSpacing, addStyles} = plotParams;
+  history.replaceState(null, '', '?f=' + encodeURIComponent(name));
   const useBlocks =
       (document.getElementById('use-blocks') as HTMLInputElement).checked;
   const viewport = vd.viewport();
@@ -171,15 +184,16 @@ function updatePlot() {
 }
 
 function main() {
-  document.getElementById('random-lines')!.onclick = plotRandomLines;
-  document.getElementById('random-circles')!.onclick = plotRandomCircles;
-  document.getElementById('mandelbrot-set')!.onclick = plotMandelbrot;
-  document.getElementById('sin-cos')!.onclick = plotSinCos;
+  for (const name in plotters) {
+    document.getElementById(name)!.onclick = plotters[name];
+  }
   document.getElementById('use-blocks')!.onclick = updatePlot;
   document.getElementById('pixel-size')!.onchange = updatePlot;
-
   vd.addEventListener('change', updatePlot);
-  plotRandomLines();
+
+  const plotterName = new URL(location.href).searchParams.get('f');
+  const plotter = plotters[plotterName ?? ''] ?? plotRandomLines;
+  plotter();
 }
 
 main();
