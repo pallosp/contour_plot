@@ -37,7 +37,17 @@ plot.append(...squaresToSvg(
 
 ## Demo
 
-To run a demo, build it with `npm run build`, start a web server with `npm run preview`, then open http://localhost:4173  
+To start a demo run the following commands then open http://localhost:4173.
 There you can select a function to plot, specify the resolution, and optionally highlight the edges of the building blocks.
+
+```sh
+git clone https://github.com/pallosp/contour_plot.git
+cd contour_plot
+npm install
+npm run build
+npm run preview
+```
+
+### Screenshot
 
 <img src="screenshot.png" alt="demo screenshot" style="width:587px;"/>
