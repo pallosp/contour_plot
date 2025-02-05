@@ -26,10 +26,10 @@ const height = svg.clientHeight;
 const domain = {x: -width / 2, y: -height / 2, width, height};
 plot.style.transform = `translate(${-domain.x}px, ${-domain.y}px)`;
 
-plot.append(...squaresToSvg(
+plot.append(...runsToSvg(
     new Plot<boolean>(hyperbola)
         .compute(domain, /* sampleSpacing= */ 128, /* pixelSize= */ 1)
-        .squares(),
+        .runs(),
     /* addStyles= */ (el, isInside) => {
       el.style.stroke = isInside ? 'olive' : 'lightgreen';
     }));
