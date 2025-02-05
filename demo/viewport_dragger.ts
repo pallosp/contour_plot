@@ -9,6 +9,7 @@ export class ViewportDragger extends EventTarget {
   private width: number;
   private height: number;
   private debounceFrames = 0;
+  private overlay = createOverlay();
 
   private readonly mouseMoveListener = (e: Event) =>
       this.mouseMove(e as MouseEvent);
@@ -31,7 +32,8 @@ export class ViewportDragger extends EventTarget {
     if (e.button !== 0) return;
     e.preventDefault();  // Don't select nearby text while panning.
     this.dragging = true;
-    window.addEventListener('mousemove', this.mouseMoveListener);
+    document.body.appendChild(this.overlay);
+    window.addEventListener('mousemove', this.mouseMoveListener, true);
     window.addEventListener('mouseup', this.mouseUpListener);
     this.lastX = e.x;
     this.lastY = e.y;
@@ -50,6 +52,7 @@ export class ViewportDragger extends EventTarget {
 
   private mouseUp() {
     this.dragging = false;
+    this.overlay.remove();
     window.removeEventListener('mousemove', this.mouseMoveListener);
     window.removeEventListener('mouseup', this.mouseUpListener);
   }
@@ -113,4 +116,16 @@ export class ViewportDragger extends EventTarget {
     this.translateY = this.height / 2;
     this.update();
   }
+}
+
+/**
+ * Creates an element over the entire document to set the mouse cursor.
+ */
+function createOverlay(): Element {
+  const overlay = document.createElement('div');
+  overlay.style.position = 'absolute';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.cursor = 'grab';
+  return overlay;
 }
