@@ -30,7 +30,7 @@ plot.append(...squaresToSvg(
     new Plot<boolean>(hyperbola)
         .compute(domain, /* sampleSpacing= */ 128, /* pixelSize= */ 1)
         .squares(),
-    /* addStyles= */ (isInside, el) => {
+    /* addStyles= */ (el, isInside) => {
       el.style.stroke = isInside ? 'olive' : 'lightgreen';
     }));
 ```

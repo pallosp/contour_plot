@@ -13,7 +13,7 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
  */
 export function squaresToSvg<T>(
     squares: Array<Square<T>>,
-    addStyles: (value: T, element: SVGElement) => void): SVGPathElement[] {
+    addStyles: (element: SVGElement, value: T) => void): SVGElement[] {
   const squareMap = new Map<T, Map<number, Array<Square<T>>>>();
   for (const square of squares) {
     let squaresBySize = squareMap.get(square.value);
@@ -38,7 +38,7 @@ export function squaresToSvg<T>(
       if (group[0].size !== 1) {
         path.setAttribute('transform', `scale(${group[0].size})`);
       }
-      addStyles(group[0].value, path);
+      addStyles(path, group[0].value);
       pathElements.push(path);
     }
   }
@@ -95,7 +95,7 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
  */
 export function runsToSvg<T>(
     runs: Array<Run<T>>,
-    addStyles: (value: T, element: SVGElement) => void): SVGElement[] {
+    addStyles: (element: SVGElement, value: T) => void): SVGElement[] {
   const scale = greatestPow2Divisor(runs[0].y);
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
@@ -112,7 +112,7 @@ export function runsToSvg<T>(
     g.setAttribute('shape-rendering', 'crispEdges');
     g.setAttribute('stroke-width', '1px');
     g.setAttribute('transform', `scale(${scale})`);
-    addStyles(runs[0].value, g);
+    addStyles(g, runs[0].value);
     for (const d of runsToPathDefs(runs, 1 / scale)) {
       const path = document.createElementNS(SVG_NAMESPACE, 'path');
       path.setAttribute('d', d);

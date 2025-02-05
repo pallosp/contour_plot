@@ -6,7 +6,7 @@ type PlotParams<T> = {
   name: string,
   plot: Plot<T>,
   sampleSpacing: number,
-  addStyles: (value: T, element: SVGElement) => void,
+  addStyles: (element: SVGElement, value: T) => void,
   zoom: number,
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,7 +46,7 @@ function plotRandomLines() {
         (x, y) => lines.some(
             (line, i) => linePointDistance(line, x, y) < 0.12 / (i + 3))),
     sampleSpacing: 1 / 2,
-    addStyles: (value, el) => {
+    addStyles: (el, value) => {
       el.classList.add(value ? 'outside' : 'perimeter');
     },
     zoom,
@@ -72,7 +72,7 @@ function plotRandomCircles() {
         (x: number, y: number) =>
             circles.reduce((acc, c) => acc * circleAt(c, x, y), 1)),
     sampleSpacing: 1 / 2,
-    addStyles: (value, el) => void el.classList.add(classes[value + 1]),
+    addStyles: (el, value) => void el.classList.add(classes[value + 1]),
     zoom,
   });
 }
@@ -94,7 +94,7 @@ function plotMandelbrot() {
     name: 'mandelbrot-set',
     plot: new Plot(mandelbrot),
     sampleSpacing: 1 / 2,
-    addStyles: (value, el) => {
+    addStyles: (el, value) => {
       el.style.stroke = '#' + (value % 6 * 3).toString(16).repeat(3);
     },
     zoom,
@@ -108,7 +108,7 @@ function plotSinCos() {
     name: 'sin-cos',
     plot: new Plot((x, y) => Math.floor((Math.sin(x) + Math.cos(y)) * 1.5)),
     sampleSpacing: 1,
-    addStyles: (value, el) => {
+    addStyles: (el, value) => {
       el.style.stroke = '#' + ((value + 3) * 3).toString(16).repeat(3);
     },
     zoom,
