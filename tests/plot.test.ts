@@ -299,6 +299,11 @@ test('nodes stay balanced after panning', () => {
       .compute({x: 0, y: 2, width: 4, height: 4}, 4, 1)
       .compute({x: 2, y: 0, width: 4, height: 4}, 4, 1)
       .runs();
+
+  new Plot((x, y) => y > 2 * x - 8)
+      .compute({x: 0, y: 0, width: 16, height: 16}, 8, 1)
+      .compute({x: 8, y: 8, width: 16, height: 16}, 8, 1)
+      .runs();
 });
 
 test('nodes stay balanced after resizing domain', () => {
