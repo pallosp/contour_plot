@@ -295,15 +295,31 @@ test('nodes stay balanced after panning', () => {
   new Plot(() => 0).compute(domain1, 2, 1).compute(domain2, 2, 1).runs();
 });
 
-test('nodes stay balanced after panning, random', () => {
+test('nodes stay balanced after resizing domain', () => {
+  const domain1 = {x: 0, y: 0, width: 2, height: 4};
+  const domain2 = {x: 0, y: 0, width: 6, height: 2};
+  // runs() shouldn't throw
+  new Plot(() => 0).compute(domain1, 2, 1).compute(domain2, 2, 1).runs();
+});
+
+test('nodes stay balanced after resizing domain, random', () => {
   for (let i = 0; i < 100; i++) {
     const a = randomInt(-8, 8), b = randomInt(-8, 8), c = randomInt(-8, 8);
     const func = (x: number, y: number) => a * x + b * y + c > 0;
-    const domain1 = VIEWPORT_4X4;
-    const domain2 =
-        {x: randomInt(-4, 4), y: randomInt(-4, 4), width: 4, height: 4};
+    const domain1 = {
+      x: randomInt(0, 8),
+      y: randomInt(0, 8),
+      width: randomInt(1, 8),
+      height: randomInt(1, 8)
+    };
+    const domain2 = {
+      x: randomInt(0, 8),
+      y: randomInt(0, 8),
+      width: randomInt(1, 8),
+      height: randomInt(1, 8)
+    };
     // runs() throwing an Error indicates unbalanced nodes
-    new Plot(func).compute(domain1, 2, 1).compute(domain2, 2, 1).runs();
+    new Plot(func).compute(domain1, 4, 1).compute(domain2, 4, 1).runs();
   }
 });
 
