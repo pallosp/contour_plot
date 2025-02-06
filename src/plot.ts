@@ -350,6 +350,7 @@ export class Plot<T> {
     const xMax = xMin + domain.width;
     const yMax = yMin + domain.height;
     const runs: Array<Run<T>> = [];
+    if (xMin === xMax) return runs;
 
     for (let y = yMin + pixelSize / 2; y < yMax; y += pixelSize) {
       let lastNode = this.leafAt(xMin + pixelSize / 2, y);

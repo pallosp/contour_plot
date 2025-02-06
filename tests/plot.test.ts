@@ -174,6 +174,14 @@ test('recomputing with different viewport and resolution', () => {
   ]);
 });
 
+test('runs from empty plot', () => {
+  const plot = new Plot(() => 0);
+  plot.compute({x: 0, y: 0, width: 1, height: 0}, 1, 1);
+  expect(plot.runs()).toEqual([]);
+  plot.compute({x: 0, y: 0, width: 0, height: 1}, 1, 1);
+  expect(plot.runs()).toEqual([]);
+});
+
 // ·██·
 // ····
 test('runs from same size squares', () => {
