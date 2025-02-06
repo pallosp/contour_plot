@@ -271,6 +271,19 @@ test('the traversal follows the continuous feature', () => {
   ]);
 });
 
+test('domain shrinking preserves info', () => {
+  const func = (x: number, y: number) => Number(y < x - 2);
+  const domain1 = {x: 0, y: 0, width: 5, height: 4};
+  const domain2 = {x: 0, y: 0, width: 4, height: 4};
+  const plot1 = new Plot(func).compute(domain1, 2, 1).compute(domain2, 2, 1);
+  const plot2 = new Plot(func).compute(domain2, 1, 1);
+  const plot3 = new Plot(func).compute(domain2, 2, 1);
+  // plot2 should preserve the 1 values in the corner after shrinking.
+  expect(plot1.runs()).toEqual(plot2.runs());
+  // plot3's sample spacing is too large to pick up the 1 values in the corner.
+  expect(plot1.runs()).not.toEqual(plot3.runs());
+});
+
 test.skip('A/B regression test for experimental features', () => {
   for (let i = 0; i < 1048576; i++) {
     const plot = new Plot(bitmapFunc4x4(i));
