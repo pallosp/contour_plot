@@ -27,6 +27,10 @@ function compareSquares<T>(a: Square<T>, b: Square<T>): number {
   return (a.y - b.y) || (a.x - b.x);
 }
 
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 test('rejects negative domain dimensions', () => {
   const plot = new Plot(() => 0);
   expect(() => plot.compute({x: 0, y: 0, width: -1, height: 1}, 1, 1))
@@ -282,6 +286,18 @@ test('domain shrinking preserves info', () => {
   expect(plot1.runs()).toEqual(plot2.runs());
   // plot3's sample spacing is too large to pick up the 1 values in the corner.
   expect(plot1.runs()).not.toEqual(plot3.runs());
+});
+
+test('nodes stay balanced after panning', () => {
+  for (let i = 0; i < 100; i++) {
+    const a = randomInt(-8, 8), b = randomInt(-8, 8), c = randomInt(-8, 8);
+    const func = (x: number, y: number) => a * x + b * y + c > 0;
+    const domain1 = VIEWPORT_4X4;
+    const domain2 =
+        {x: randomInt(-4, 4), y: randomInt(-4, 4), width: 4, height: 4};
+    // runs() throwing an Error indicates unbalanced nodes
+    new Plot(func).compute(domain1, 2, 1).compute(domain2, 2, 1).runs();
+  }
 });
 
 test('stats.affectedPixels', () => {
