@@ -284,6 +284,24 @@ test('domain shrinking preserves info', () => {
   expect(plot1.runs()).not.toEqual(plot3.runs());
 });
 
+test('stats.affectedPixels', () => {
+  const plot = new Plot(() => 0).compute(VIEWPORT_4X4, 2, 2);
+  expect(plot.computeStats().affectedPixels).toBe(4);
+
+  // same domain
+  plot.compute(VIEWPORT_4X4, 2, 2);
+  expect(plot.computeStats().affectedPixels).toBe(0);
+
+  // shrunk domain
+  plot.compute({x: 0, y: 0, width: 2, height: 2}, 2, 2);
+  expect(plot.computeStats().affectedPixels).toBe(0);
+
+  // increased pixel size
+  const plot2 = new Plot(() => 0).compute(VIEWPORT_4X4, 2, 1);
+  plot2.compute(VIEWPORT_4X4, 1, 1);
+  expect(plot.computeStats().affectedPixels).toBe(0);
+});
+
 test.skip('A/B regression test for experimental features', () => {
   for (let i = 0; i < 1048576; i++) {
     const plot = new Plot(bitmapFunc4x4(i));
