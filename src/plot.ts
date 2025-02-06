@@ -327,11 +327,13 @@ export class Plot<T> {
     let node: Node<T>|undefined;
     const state = this.state;
     let size = state.pixelSize;
-    while (!(node = state.nodes.get(state.cx * x + state.cy * y))) {
+    while (!(node = state.nodes.get(state.cx * x + state.cy * y)) &&
+           size < state.sampleSpacing) {
       size *= 2;
       x = (Math.floor(x / size) + 0.5) * size;
       y = (Math.floor(y / size) + 0.5) * size;
     }
+    assert(node);
     return node;
   }
 
