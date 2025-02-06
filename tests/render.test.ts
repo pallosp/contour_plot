@@ -1,4 +1,5 @@
-import {runsToBitmap, squaresToBitmap} from '../src/render';
+import {Plot} from '../src/plot';
+import {booleanSquaresToText, runsToBitmap, squaresToBitmap} from '../src/render';
 
 test('disjoint squares', () => {
   const viewport = {x: 0, y: 0, width: 4, height: 2};
@@ -87,4 +88,21 @@ test('intersecting runs', () => {
       ],
       viewport);
   expect(bitmap).toEqual([[1, 2, 2]]);
+});
+
+test('booleanSquaresToText, empty list', () => {
+  expect(booleanSquaresToText([])).toBe('');
+});
+
+test('booleanSquaresToText', () => {
+  const unicodePlot = booleanSquaresToText(
+      new Plot((x, y) => y < x - 4)
+          .compute({x: 0, y: 0, width: 12, height: 4}, 4, 1)
+          .squares());
+  expect(unicodePlot)
+      .toBe(
+          '┌─────┐ □ ■ ▗▄▖ ▗▄▄▄▄▄▖ \n' +
+          '│     │ □ □ ▝▀▘ ▐█████▌ \n' +
+          '│     │ ┌─┐ □ ■ ▐█████▌ \n' +
+          '└─────┘ └─┘ □ □ ▝▀▀▀▀▀▘ ');
 });

@@ -221,3 +221,51 @@ export function runsToBitmap<T>(
   }
   return bitmap;
 }
+
+const WHITE_BOX_ELEMENTS =
+    ['┌─', '──', '┐ ', '│ ', '  ', '│ ', '└─', '──', '┘ ', '□ '];
+const BLACK_BOX_ELEMENTS =
+    ['▗▄', '▄▄', '▖ ', '▐█', '██', '▌ ', '▝▀', '▀▀', '▘ ', '■ '];
+
+/**
+ * Renders boolean-valued square tiles using Unicode characters. Leaves space
+ * between them to make the individual squares visually distinguishable.
+ */
+export function booleanSquaresToText(squares: Array<Square<boolean>>): string {
+  if (squares.length === 0) return '';
+  const sq = squares[0];
+  let x0 = sq.x, x1 = sq.x, y0 = sq.y, y1 = sq.y, minSize = sq.size;
+  for (const {x, y, size} of squares) {
+    const r = size / 2;
+    if (x - r < x0) x0 = x - r;
+    if (x + r > x1) x1 = x + r;
+    if (y - r < y0) y0 = y - r;
+    if (y + r >= y1) y1 = y + r;
+    if (size < minSize) minSize = size;
+  }
+  const w = (x1 - x0) / minSize;
+  const h = (y1 - y0) / minSize;
+  const chars: Array<Array<string>> = [];
+  for (let y = 0; y < h; y++) {
+    chars.push(Array(w).fill('  '));
+  }
+  for (let {x, y, size, value} of squares) {
+    const r = size / 2;
+    const n = size / minSize;
+    x = (x - r - x0) / minSize;
+    y = (y - r - y0) / minSize;
+    const boxElements = value ? BLACK_BOX_ELEMENTS : WHITE_BOX_ELEMENTS;
+    if (n === 1) {
+      chars[y][x] = boxElements[9];
+    } else {
+      for (let j = 0; j < n; j++) {
+        for (let i = 0; i < n; i++) {
+          const row = j === 0 ? 0 : j === n - 1 ? 6 : 3;
+          const col = i === 0 ? 0 : i === n - 1 ? 2 : 1;
+          chars[y + j][x + i] = boxElements[row + col];
+        }
+      }
+    }
+  }
+  return chars.map(row => row.join('')).join('\n');
+}
