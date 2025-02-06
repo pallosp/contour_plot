@@ -289,6 +289,13 @@ test('domain shrinking preserves info', () => {
 });
 
 test('nodes stay balanced after panning', () => {
+  const domain1 = VIEWPORT_4X4;
+  const domain2 = {x: 1, y: 1, width: 4, height: 4};
+  // runs() shouldn't throw
+  new Plot(() => 0).compute(domain1, 2, 1).compute(domain2, 2, 1).runs();
+});
+
+test('nodes stay balanced after panning, random', () => {
   for (let i = 0; i < 100; i++) {
     const a = randomInt(-8, 8), b = randomInt(-8, 8), c = randomInt(-8, 8);
     const func = (x: number, y: number) => a * x + b * y + c > 0;
