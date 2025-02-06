@@ -27,6 +27,18 @@ function compareSquares<T>(a: Square<T>, b: Square<T>): number {
   return (a.y - b.y) || (a.x - b.x);
 }
 
+test('rejects negative domain dimensions', () => {
+  const plot = new Plot(() => 0);
+  expect(() => plot.compute({x: 0, y: 0, width: -1, height: 1}, 1, 1))
+      .toThrow();
+  expect(() => plot.compute({x: 0, y: 0, width: -1, height: 0}, 1, 1))
+      .toThrow();
+  expect(() => plot.compute({x: 0, y: 0, width: 1, height: -1}, 1, 1))
+      .toThrow();
+  expect(() => plot.compute({x: 0, y: 0, width: 0, height: -1}, 1, 1))
+      .toThrow();
+});
+
 test('constant function', () => {
   const plot = new Plot(() => 2);
   plot.compute({x: 0, y: 0, width: 1, height: 1}, 1, 1);

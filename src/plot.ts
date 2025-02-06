@@ -34,6 +34,8 @@ function createState<T>(
     domain: Rect, sampleSpacing: number, pixelSize: number): State<T> {
   assert(Number.isInteger(Math.log2(sampleSpacing)));
   assert(Number.isInteger(Math.log2(pixelSize)));
+  assert(domain.width >= 0);
+  assert(domain.height >= 0);
 
   sampleSpacing = Math.max(pixelSize, sampleSpacing);
   domain = alignToGrid(domain, sampleSpacing);
