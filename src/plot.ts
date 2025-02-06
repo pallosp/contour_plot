@@ -8,10 +8,12 @@ interface Node<T> extends Square<T> {
   leaf: boolean;
 }
 
+type NodeMap<T> = Map<number, Node<T>>;
+
 /** Plot state. */
 interface State<T> {
   // Nodes of the underlying quadtree, keyed by x * cx + y * cy
-  readonly nodes: Map<number, Node<T>>;
+  nodes: NodeMap<T>;
   // Domain rectangle aligned to a multiple of sampleSpacing
   readonly domain: Rect;
   // Initial density of the points to evaluate.
@@ -89,7 +91,11 @@ export class Plot<T> {
     let prevSize = 0;
     let reusedArea = 0;
     if (reuse) {
-      this.copyFiltered(prevState.nodes, state);
+      if (canReuseAllNodes(state, prevState)) {
+        state.nodes = prevState.nodes;
+      } else {
+        copyNodesFiltered(prevState.nodes, state);
+      }
       if (pixelSize === prevState.pixelSize) {
         reusedArea = overlappingArea(domain, prevState.domain);
       }
@@ -130,24 +136,6 @@ export class Plot<T> {
         const node = {x, y, size: sampleSpacing, value: func(x, y), leaf: true};
         nodes.set(key, node);
         if (enqueue) queue.push(node);
-      }
-    }
-  }
-
-  /**
-   * Copies the nodes that meet the constraints of `state` from `sourceNodes`
-   * to `state.nodes`.
-   */
-  private copyFiltered(sourceNodes: Map<number, Node<T>>, state: State<T>) {
-    const {nodes, domain, sampleSpacing, pixelSize, cx, cy} = state;
-    const {x, y} = domain;
-    const right = x + domain.width;
-    const bottom = y + domain.height;
-
-    for (const node of sourceNodes.values()) {
-      if (node.x > x && node.x < right && node.y > y && node.y < bottom &&
-          node.size >= pixelSize && node.size <= sampleSpacing) {
-        nodes.set(node.x * cx + node.y * cy, node);
       }
     }
   }
@@ -396,5 +384,31 @@ export class Plot<T> {
     }
 
     return runs;
+  }
+}
+
+function canReuseAllNodes<T>(state: State<T>, prevState: State<T>): boolean {
+  const prevDomain = prevState.domain;
+  const prevArea = prevDomain.width * prevDomain.height;
+  return state.sampleSpacing >= prevState.sampleSpacing &&
+      state.pixelSize <= prevState.pixelSize &&
+      overlappingArea(state.domain, prevDomain) === prevArea;
+}
+
+/**
+ * Copies the nodes that meet the constraints of `state` from `sourceNodes`
+ * to `state.nodes`.
+ */
+function copyNodesFiltered<T>(sourceNodes: NodeMap<T>, state: State<T>) {
+  const {nodes, domain, sampleSpacing, pixelSize, cx, cy} = state;
+  const {x, y} = domain;
+  const right = x + domain.width;
+  const bottom = y + domain.height;
+
+  for (const node of sourceNodes.values()) {
+    if (node.x > x && node.x < right && node.y > y && node.y < bottom &&
+        node.size >= pixelSize && node.size <= sampleSpacing) {
+      nodes.set(node.x * cx + node.y * cy, node);
+    }
   }
 }
