@@ -32,3 +32,10 @@ export function overlappingArea(rect1: Rect, rect2: Rect): number {
 
   return width > 0 && height > 0 ? width * height : 0;
 }
+
+/** Tells whether rect1 contains rect2. */
+export function containsRect(rect1: Rect, rect2: Rect): boolean {
+  return rect1.x <= rect2.x && rect1.y <= rect2.y &&
+      rect1.x + rect1.width >= rect2.x + rect2.width &&
+      rect1.y + rect1.height >= rect2.y + rect2.height;
+}
