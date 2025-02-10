@@ -314,6 +314,14 @@ test('nodes stay balanced after resizing domain', () => {
       .runs();
 });
 
+test('nodes stay balanced after shrinking domain', () => {
+  // runs() shouldn't throw
+  new Plot((x, y) => x > y)
+      .compute({x: 0, y: 0, width: 8, height: 4}, 4, 1)
+      .compute({x: 0, y: 0, width: 4, height: 4}, 4, 1)
+      .runs();
+});
+
 test('nodes stay balanced after resizing domain, random', () => {
   for (let i = 0; i < 100; i++) {
     const a = randomInt(-8, 8), b = randomInt(-8, 8), c = randomInt(-8, 8);
