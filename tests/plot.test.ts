@@ -286,6 +286,13 @@ test('the traversal follows the continuous feature', () => {
   ]);
 });
 
+test('# squares after extending domain', () => {
+  const plot = new Plot((x) => x > 2)
+                   .compute({x: 0, y: 0, width: 4, height: 2}, 2, 1)
+                   .compute({x: 0, y: 0, width: 4, height: 4}, 2, 1);
+  expect(plot.squares().length).toBe(4);
+});
+
 test('domain shrinking preserves info', () => {
   const func = (x: number, y: number) => Number(y < x - 2);
   const domain1 = {x: 0, y: 0, width: 5, height: 4};
@@ -310,10 +317,15 @@ test('nodes stay balanced after panning', () => {
                     .compute({x: 2, y: 0, width: 4, height: 4}, 4, 1);
   expect(() => plot2.runs()).not.toThrow();
 
-  const plot3 = new Plot((x, y) => y > 2 * x - 8)
+  const plot3 = new Plot((x, y) => x > y)
+                    .compute({x: 0, y: 0, width: 8, height: 8}, 4, 1)
+                    .compute({x: 0, y: 4, width: 8, height: 8}, 4, 1);
+  expect(() => plot3.runs()).not.toThrow();
+
+  const plot4 = new Plot((x, y) => y > 2 * x - 8)
                     .compute({x: 0, y: 0, width: 16, height: 16}, 8, 1)
                     .compute({x: 8, y: 8, width: 16, height: 16}, 8, 1);
-  expect(() => plot3.runs()).not.toThrow();
+  expect(() => plot4.runs()).not.toThrow();
 });
 
 test('nodes stay balanced after resizing domain', () => {
