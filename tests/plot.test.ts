@@ -300,37 +300,34 @@ test('domain shrinking preserves info', () => {
 });
 
 test('nodes stay balanced after panning', () => {
-  // runs() shouldn't throw
-  new Plot(() => 0)
-      .compute(VIEWPORT_4X4, 2, 1)
-      .compute({x: 1, y: 1, width: 4, height: 4}, 2, 1)
-      .runs();
+  const plot1 = new Plot(() => 0)
+                    .compute(VIEWPORT_4X4, 2, 1)
+                    .compute({x: 2, y: 2, width: 4, height: 4}, 2, 1);
+  expect(() => plot1.runs()).not.toThrow();
 
-  new Plot((x, y) => y < x + 1)
-      .compute({x: 0, y: 2, width: 4, height: 4}, 4, 1)
-      .compute({x: 2, y: 0, width: 4, height: 4}, 4, 1)
-      .runs();
+  const plot2 = new Plot((x, y) => y < x + 1)
+                    .compute({x: 0, y: 2, width: 4, height: 4}, 4, 1)
+                    .compute({x: 2, y: 0, width: 4, height: 4}, 4, 1);
+  expect(() => plot2.runs()).not.toThrow();
 
-  new Plot((x, y) => y > 2 * x - 8)
-      .compute({x: 0, y: 0, width: 16, height: 16}, 8, 1)
-      .compute({x: 8, y: 8, width: 16, height: 16}, 8, 1)
-      .runs();
+  const plot3 = new Plot((x, y) => y > 2 * x - 8)
+                    .compute({x: 0, y: 0, width: 16, height: 16}, 8, 1)
+                    .compute({x: 8, y: 8, width: 16, height: 16}, 8, 1);
+  expect(() => plot3.runs()).not.toThrow();
 });
 
 test('nodes stay balanced after resizing domain', () => {
-  // runs() shouldn't throw
-  new Plot(() => 0)
-      .compute({x: 0, y: 0, width: 2, height: 4}, 2, 1)
-      .compute({x: 0, y: 0, width: 6, height: 2}, 2, 1)
-      .runs();
+  const plot = new Plot(() => 0)
+                   .compute({x: 0, y: 0, width: 2, height: 4}, 2, 1)
+                   .compute({x: 0, y: 0, width: 6, height: 2}, 2, 1);
+  expect(() => plot.runs()).not.toThrow();
 });
 
 test('nodes stay balanced after shrinking domain', () => {
-  // runs() shouldn't throw
-  new Plot((x, y) => x > y)
-      .compute({x: 0, y: 0, width: 8, height: 4}, 4, 1)
-      .compute({x: 0, y: 0, width: 4, height: 4}, 4, 1)
-      .runs();
+  const plot = new Plot((x, y) => x > y)
+                   .compute({x: 0, y: 0, width: 8, height: 4}, 4, 1)
+                   .compute({x: 0, y: 0, width: 4, height: 4}, 4, 1);
+  expect(() => plot.runs()).not.toThrow();
 });
 
 test('nodes stay balanced after resizing domain, random', () => {
@@ -349,10 +346,10 @@ test('nodes stay balanced after resizing domain, random', () => {
       width: randomInt(1, 2) * 4,
       height: randomInt(1, 2) * 4,
     };
-    // runs() throwing an Error indicates unbalanced nodes
-    const plot = new Plot(func);
+    const plot = new Plot(func).compute(domain1, 4, 1).compute(domain2, 4, 1);
     try {
-      plot.compute(domain1, 4, 1).compute(domain2, 4, 1).runs();
+      // runs() throwing an Error indicates unbalanced nodes
+      expect(() => plot.runs()).not.toThrow();
     } catch (e) {
       console.error(
           `Failure while resizing domain\n\n` +
