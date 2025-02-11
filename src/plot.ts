@@ -58,7 +58,7 @@ export class Plot<T> {
    */
   private readonly queue: Array<Node<T>> = [];
 
-  constructor(readonly func: (x: number, y: number) => T) {};
+  constructor(private readonly func: (x: number, y: number) => T) {};
 
   /**
    * Evaluates the function passed to the constructor at every grid point within
