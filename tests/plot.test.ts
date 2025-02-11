@@ -383,22 +383,44 @@ test('nodes stay balanced after resizing domain, random', () => {
   }
 });
 
-test('stats.affectedPixels', () => {
-  const plot = new Plot(() => 0).compute(VIEWPORT_4X4, 2, 2);
-  expect(plot.computeStats().affectedPixels).toBe(4);
+test('computeStats', () => {
+  const plot = new Plot((x) => x > 2);
 
-  // same domain
-  plot.compute(VIEWPORT_4X4, 2, 2);
-  expect(plot.computeStats().affectedPixels).toBe(0);
+  // initial computation
+  let stats =
+      plot.compute({x: 0, y: 0, width: 4, height: 2}, 2, 1).computeStats();
+  expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
+  expect(stats.size).toBe(10);
+  expect(stats.deltaSize).toBe(10);
+  expect(stats.affectedPixels).toBe(8);
+
+  // no change
+  stats = plot.compute({x: 0, y: 0, width: 4, height: 2}, 2, 1).computeStats();
+  expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
+  expect(stats.size).toBe(10);
+  expect(stats.deltaSize).toBe(0);
+  expect(stats.affectedPixels).toBe(0);
+
+  // extended domain
+  stats = plot.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1).computeStats();
+  expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
+  expect(stats.size).toBe(20);
+  // Incremental recomputation not implemented yet
+  expect(stats.deltaSize).toBe(20);
+  expect(stats.affectedPixels).toBe(16);
 
   // shrunk domain
-  plot.compute({x: 0, y: 0, width: 2, height: 2}, 2, 2);
-  expect(plot.computeStats().affectedPixels).toBe(0);
+  stats = plot.compute({x: 0, y: 2, width: 4, height: 2}, 2, 1).computeStats();
+  expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
+  expect(stats.size).toBe(10);
+  expect(stats.deltaSize).toBe(0);
+  expect(stats.affectedPixels).toBe(0);
 
-  // increased pixel size
-  const plot2 = new Plot(() => 0).compute(VIEWPORT_4X4, 2, 1);
-  plot2.compute(VIEWPORT_4X4, 1, 1);
-  expect(plot.computeStats().affectedPixels).toBe(0);
+  // larger pixels
+  stats = plot.compute({x: 0, y: 2, width: 4, height: 2}, 2, 2).computeStats();
+  expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
+  expect(stats.size).toBe(2);
+  expect(stats.deltaSize).toBe(2);
 });
 
 test.skip('A/B regression test for experimental features', () => {
