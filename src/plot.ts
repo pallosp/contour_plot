@@ -102,6 +102,14 @@ export class Plot<T> {
   }
 
   /**
+   * Domain of the last computation. Its boundaries are aligned to the multiples
+   * of `sampleSpacing`. Empty rectangle if `compute()` hasn't been called yet.
+   */
+  public domain(): Rect {
+    return this.state.domain;
+  }
+
+  /**
    * Statistics about the last computation.
    */
   public computeStats(): ComputeStats {

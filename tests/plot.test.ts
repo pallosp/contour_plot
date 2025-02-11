@@ -31,6 +31,15 @@ function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+test('zero state', () => {
+  const plot = new Plot(() => 0);
+  expect(plot.domain()).toEqual({x: 0, y: 0, width: 0, height: 0});
+  expect(plot.squares()).toEqual([]);
+  expect(plot.runs()).toEqual([]);
+  expect(plot.computeStats())
+      .toEqual({size: 0, deltaSize: 0, affectedPixels: 0, elapsedMs: 0});
+});
+
 test('rejects negative domain dimensions', () => {
   const plot = new Plot(() => 0);
   expect(() => plot.compute({x: 0, y: 0, width: -1, height: 1}, 1, 1))
@@ -65,6 +74,7 @@ test('sampling', () => {
 test('viewport not aligned with samples', () => {
   const plot = new Plot(() => 0);
   plot.compute({x: 1, y: 1, width: 2, height: 2}, 2, 1);
+  expect(plot.domain()).toEqual({x: 0, y: 0, width: 4, height: 4});
   expect(plot.squares().sort(compareSquares)).toEqual([
     expect.objectContaining({x: 1, y: 1, size: 2, value: 0}),
     expect.objectContaining({x: 3, y: 1, size: 2, value: 0}),
