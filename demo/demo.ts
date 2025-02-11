@@ -1,4 +1,5 @@
 import {Plot, runsToSvg, squaresToSvg} from '../src';
+import {containsRect} from '../src/rect';
 
 import {ViewportDragger} from './viewport_dragger';
 
@@ -124,12 +125,17 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   history.replaceState(null, '', '?f=' + encodeURIComponent(name));
   const useBlocks =
       (document.getElementById('use-blocks') as HTMLInputElement).checked;
-  const viewport = vd.viewport();
+  let viewport = vd.viewport();
   const pixelSizeInput =
       document.querySelector<HTMLInputElement>('#pixel-size')!;
   const pixelSize = 2 ** +pixelSizeInput.value / roundDownToPow2(vd.zoom);
   sampleSpacing = Math.max(sampleSpacing, pixelSize);
 
+  if (sampleSpacing === lastPlotParams?.sampleSpacing &&
+      pixelSize === lastPlotParams?.plot?.pixelSize() &&
+      containsRect(plotParams.plot.domain(), viewport)) {
+    viewport = plotParams.plot.domain();
+  }
   plot.compute(viewport, sampleSpacing, pixelSize);
   const computeStats = plot.computeStats();
 
@@ -176,10 +182,11 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
 }
 
 function updatePlot() {
-  lastPlotParams!.sampleSpacing *=
+  const plotParams = {...lastPlotParams!};
+  plotParams.sampleSpacing *=
       roundDownToPow2(lastPlotParams!.zoom) / roundDownToPow2(vd.zoom);
-  lastPlotParams!.zoom = vd.zoom;
-  plotFunction(lastPlotParams!);
+  plotParams.zoom = vd.zoom;
+  plotFunction(plotParams);
 }
 
 function main() {

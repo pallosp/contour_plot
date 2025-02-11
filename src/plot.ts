@@ -115,6 +115,10 @@ export class Plot<T> {
     return this.state.domain;
   }
 
+  public pixelSize(): number {
+    return this.state.pixelSize;
+  }
+
   /**
    * Statistics about the last computation.
    */
