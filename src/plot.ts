@@ -115,6 +115,9 @@ export class Plot<T> {
     return this.state.domain;
   }
 
+  /**
+   * Resolution of the last computation (height of the smallest square).
+   */
   public pixelSize(): number {
     return this.state.pixelSize;
   }
