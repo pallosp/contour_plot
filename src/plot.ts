@@ -32,22 +32,6 @@ export interface ComputeStats {
   elapsedMs: number;
 }
 
-function createState<T>(
-    domain: Rect, sampleSpacing: number, pixelSize: number): State<T> {
-  assert(Number.isInteger(Math.log2(sampleSpacing)));
-  assert(Number.isInteger(Math.log2(pixelSize)));
-  assert(domain.width >= 0);
-  assert(domain.height >= 0);
-
-  sampleSpacing = Math.max(pixelSize, sampleSpacing);
-  domain = alignToGrid(domain, sampleSpacing);
-  const nodes = new Map<number, Node<T>>();
-  const cx = 2 / pixelSize;
-  const cy = domain.width / pixelSize * cx;
-
-  return {nodes, domain, sampleSpacing, pixelSize, cx, cy};
-}
-
 const EMPTY_STATE: State<unknown> =
     createState({x: 0, y: 0, width: 0, height: 0}, 1, 1);
 
@@ -115,6 +99,95 @@ export class Plot<T> {
     this.stats.elapsedMs = performance.now() - startTime;
 
     return this;
+  }
+
+  /**
+   * Statistics about the last computation.
+   */
+  public computeStats(): ComputeStats {
+    return this.stats;
+  }
+
+  /**
+   * Returns a list of squares that cover the domain rectangle without overlap,
+   * and within each square the plotted function evaluates to the same value.
+   * When compression is enabled, merges equal valued neighboring squares.
+   */
+  public squares(compress = true): Array<Square<T>> {
+    const squares: Array<Square<T>> = [];
+    const {nodes, sampleSpacing} = this.state;
+    if (compress) {
+      for (const node of nodes.values()) {
+        if (node.size < sampleSpacing) break;
+        if (this.collectSquares(node, squares) !== NON_UNIFORM) {
+          squares.push(node);
+        }
+      }
+    } else {
+      for (const node of nodes.values()) {
+        if (node.leaf) squares.push(node);
+      }
+    }
+    return squares;
+  }
+
+  /**
+   * Returns the plot as a list of "runs". Each run is a horizontal line
+   * aligned to the center of the "pixels", along which the plotted function's
+   * value is considered constant.
+   */
+  public runs(): Array<Run<T>> {
+    const {cx, cy, domain, nodes, pixelSize} = this.state;
+
+    const xMin = domain.x;
+    const yMin = domain.y;
+    const xMax = xMin + domain.width;
+    const yMax = yMin + domain.height;
+    const runs: Array<Run<T>> = [];
+    if (xMin === xMax) return runs;
+
+    for (let y = yMin + pixelSize / 2; y < yMax; y += pixelSize) {
+      let lastNode = this.leafAt(xMin + pixelSize / 2, y);
+      let lastRun: Run<T> = {
+        xMin,
+        xMax: xMin + lastNode.size,
+        y,
+        value: lastNode.value,
+      };
+      runs.push(lastRun);
+
+      while (lastRun.xMax < xMax) {
+        const rightX = lastNode.x + lastNode.size;
+        const rightY = lastNode.y;
+        let node = nodes.get(cx * rightX + cy * rightY);
+        if (!node) {
+          const parentSize = lastNode.size * 2;
+          const parentX = rightX + parentSize / 4;
+          const parentY = (Math.floor(rightY / parentSize) + 0.5) * parentSize;
+          node = nodes.get(cx * parentX + cy * parentY)!;
+        } else if (!node.leaf) {
+          const offset = lastNode.size / 4;
+          const childX = rightX - offset;
+          const childY = y > rightY ? rightY + offset : rightY - offset;
+          node = nodes.get(cx * childX + cy * childY)!;
+        }
+
+        if (node.value === lastNode.value) {
+          lastRun.xMax += node.size;
+        } else {
+          lastRun = {
+            xMin: lastRun.xMax,
+            xMax: lastRun.xMax + node.size,
+            y,
+            value: node.value,
+          };
+          runs.push(lastRun);
+        }
+        lastNode = node;
+      }
+    }
+
+    return runs;
   }
 
   /**
@@ -283,36 +356,6 @@ export class Plot<T> {
     return v1;
   }
 
-  /**
-   * Returns a list of squares that cover the domain rectangle without overlap,
-   * and within each square the plotted function evaluates to the same value.
-   * When compression is enabled, merges equal valued neighboring squares.
-   */
-  squares(compress = true): Array<Square<T>> {
-    const squares: Array<Square<T>> = [];
-    const {nodes, sampleSpacing} = this.state;
-    if (compress) {
-      for (const node of nodes.values()) {
-        if (node.size < sampleSpacing) break;
-        if (this.collectSquares(node, squares) !== NON_UNIFORM) {
-          squares.push(node);
-        }
-      }
-    } else {
-      for (const node of nodes.values()) {
-        if (node.leaf) squares.push(node);
-      }
-    }
-    return squares;
-  }
-
-  /**
-   * Statistics about the last computation.
-   */
-  computeStats(): ComputeStats {
-    return this.stats;
-  }
-
   private leafAt(x: number, y: number): Node<T> {
     let node: Node<T>|undefined;
     const state = this.state;
@@ -326,65 +369,22 @@ export class Plot<T> {
     assert(node);
     return node;
   }
+}
 
-  /**
-   * Returns the plot as a list of "runs". Each run is a horizontal line
-   * aligned to the center of the "pixels", along which the plotted function's
-   * value is considered constant.
-   */
-  runs(): Array<Run<T>> {
-    const {cx, cy, domain, nodes, pixelSize} = this.state;
+function createState<T>(
+    domain: Rect, sampleSpacing: number, pixelSize: number): State<T> {
+  assert(Number.isInteger(Math.log2(sampleSpacing)));
+  assert(Number.isInteger(Math.log2(pixelSize)));
+  assert(domain.width >= 0);
+  assert(domain.height >= 0);
 
-    const xMin = domain.x;
-    const yMin = domain.y;
-    const xMax = xMin + domain.width;
-    const yMax = yMin + domain.height;
-    const runs: Array<Run<T>> = [];
-    if (xMin === xMax) return runs;
+  sampleSpacing = Math.max(pixelSize, sampleSpacing);
+  domain = alignToGrid(domain, sampleSpacing);
+  const nodes = new Map<number, Node<T>>();
+  const cx = 2 / pixelSize;
+  const cy = domain.width / pixelSize * cx;
 
-    for (let y = yMin + pixelSize / 2; y < yMax; y += pixelSize) {
-      let lastNode = this.leafAt(xMin + pixelSize / 2, y);
-      let lastRun: Run<T> = {
-        xMin,
-        xMax: xMin + lastNode.size,
-        y,
-        value: lastNode.value,
-      };
-      runs.push(lastRun);
-
-      while (lastRun.xMax < xMax) {
-        const rightX = lastNode.x + lastNode.size;
-        const rightY = lastNode.y;
-        let node = nodes.get(cx * rightX + cy * rightY);
-        if (!node) {
-          const parentSize = lastNode.size * 2;
-          const parentX = rightX + parentSize / 4;
-          const parentY = (Math.floor(rightY / parentSize) + 0.5) * parentSize;
-          node = nodes.get(cx * parentX + cy * parentY)!;
-        } else if (!node.leaf) {
-          const offset = lastNode.size / 4;
-          const childX = rightX - offset;
-          const childY = y > rightY ? rightY + offset : rightY - offset;
-          node = nodes.get(cx * childX + cy * childY)!;
-        }
-
-        if (node.value === lastNode.value) {
-          lastRun.xMax += node.size;
-        } else {
-          lastRun = {
-            xMin: lastRun.xMax,
-            xMax: lastRun.xMax + node.size,
-            y,
-            value: node.value,
-          };
-          runs.push(lastRun);
-        }
-        lastNode = node;
-      }
-    }
-
-    return runs;
-  }
+  return {nodes, domain, sampleSpacing, pixelSize, cx, cy};
 }
 
 function canReuseAllNodes<T>(state: State<T>, prevState: State<T>): boolean {
