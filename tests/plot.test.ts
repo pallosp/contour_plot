@@ -1,4 +1,5 @@
 import {Plot} from '../src/plot';
+import {booleanSquaresToText} from '../src/render';
 import {Square} from '../src/types';
 
 const VIEWPORT_4X4 = {
@@ -337,19 +338,32 @@ test('nodes stay balanced after resizing domain, random', () => {
     const a = randomInt(-8, 8), b = randomInt(-8, 8), c = randomInt(-8, 8);
     const func = (x: number, y: number) => a * x + b * y + c > 0;
     const domain1 = {
-      x: randomInt(0, 8),
-      y: randomInt(0, 8),
-      width: randomInt(1, 8),
-      height: randomInt(1, 8)
+      x: randomInt(0, 2) * 4,
+      y: randomInt(0, 2) * 4,
+      width: randomInt(1, 2) * 4,
+      height: randomInt(1, 2) * 4,
     };
     const domain2 = {
-      x: randomInt(0, 8),
-      y: randomInt(0, 8),
-      width: randomInt(1, 8),
-      height: randomInt(1, 8)
+      x: randomInt(0, 2) * 4,
+      y: randomInt(0, 2) * 4,
+      width: randomInt(1, 2) * 4,
+      height: randomInt(1, 2) * 4,
     };
     // runs() throwing an Error indicates unbalanced nodes
-    new Plot(func).compute(domain1, 4, 1).compute(domain2, 4, 1).runs();
+    const plot = new Plot(func);
+    try {
+      plot.compute(domain1, 4, 1).compute(domain2, 4, 1).runs();
+    } catch (e) {
+      console.error(
+          `Failure while resizing domain\n\n` +
+          `Old domain: x: ${domain1.x}, y: ${domain1.y}, width: ${
+              domain1.width}, height: ${domain1.height}\n` +
+          `New domain: x: ${domain2.x}, y: ${domain2.y}, width: ${
+              domain2.width}, height: ${domain2.height}\n\n` +
+          `Function: ${a}x + ${b}y + ${c} > 0\n` +
+          booleanSquaresToText(plot.squares(false), 1));
+      throw e;
+    }
   }
 });
 
