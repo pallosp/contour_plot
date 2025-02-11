@@ -106,3 +106,12 @@ test('booleanSquaresToText', () => {
           '│     │ ┌─┐ □ ■ ▐█████▌ \n' +
           '└─────┘ └─┘ □ □ ▝▀▀▀▀▀▘ ');
 });
+
+test('booleanSquaresToText, custom pixelSize', () => {
+  const square1 = {x: 0.5, y: 0.5, size: 1, value: false};
+  const square2 = {x: 1.5, y: 0.5, size: 1, value: true};
+  expect(booleanSquaresToText([square1, square2], 0.5))
+      .toBe(
+          '┌─┐ ▗▄▖ \n' +
+          '└─┘ ▝▀▘ ');
+});

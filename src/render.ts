@@ -230,11 +230,16 @@ const BLACK_BOX_ELEMENTS =
 /**
  * Renders boolean-valued square tiles using Unicode characters. Leaves space
  * between them to make the individual squares visually distinguishable.
+ *
+ * The smallest square will be 1 character tall if `pixelSize` is unset, or
+ * `square.size / pixelSize` characters tall if `pixelSize` is specified.
  */
-export function booleanSquaresToText(squares: Array<Square<boolean>>): string {
+export function booleanSquaresToText(
+    squares: Array<Square<boolean>>, pixelSize?: number): string {
   if (squares.length === 0) return '';
   const sq = squares[0];
   let x0 = sq.x, x1 = sq.x, y0 = sq.y, y1 = sq.y, minSize = sq.size;
+  if (pixelSize !== undefined) minSize = pixelSize;
   for (const {x, y, size} of squares) {
     const r = size / 2;
     if (x - r < x0) x0 = x - r;
