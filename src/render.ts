@@ -52,7 +52,7 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
   const size = squares[0].size;
   const scale = 1 / size;
   const d: string[] = [];
-  let last = {} as Square<unknown>;
+  let last = {x: 0} as Square<unknown>;
   let h = 0;
   squares.sort((s1, s2) => s1.y - s2.y || s1.x - s2.x);
   squares.push({} as Square<unknown>);
@@ -70,13 +70,10 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
         h = 0;
       }
       if (square.y !== undefined) {
-        if (last.x !== undefined) {
-          d.push(
-              `m${(square.x - last.x) * scale} ${(square.y - last.y) * scale}`,
-          );
-        } else {
-          d.push(`M${square.x * scale} ${square.y * scale}`);
-        }
+        d.push(
+            `m${(square.x - last.x) * scale} ${
+                (square.y - (last.y ?? 0)) * scale}`,
+        );
       }
     }
     last = square;
@@ -154,7 +151,6 @@ function runsToPathDefs(runs: Array<Run<unknown>>, zoom: number): string[] {
     } else {
       if (run.y > lastY) {
         if ((++rows) % 64 === 0) {
-          d[0] = 'M' + d[0].substring(1);
           pathDefs.push(d.join(''));
           d = [];
           lastX = 0;
@@ -169,7 +165,6 @@ function runsToPathDefs(runs: Array<Run<unknown>>, zoom: number): string[] {
     }
     lastY = run.y;
   }
-  d[0] = 'M' + d[0].substring(1);
   pathDefs.push(d.join(''));
   return pathDefs;
 }
