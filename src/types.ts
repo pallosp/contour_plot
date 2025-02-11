@@ -4,13 +4,13 @@
  */
 export interface Square<T> {
   /** x-coordinate of the center point */
-  x: number;
+  readonly x: number;
   /** y-coordinate of the center point */
-  y: number;
+  readonly y: number;
   /** edge size */
-  size: number;
+  readonly size: number;
   /** value of the plotted function at the center */
-  value: T;
+  readonly value: T;
 }
 
 /**

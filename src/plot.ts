@@ -4,6 +4,7 @@ import {alignToGrid, overlappingArea, Rect} from './rect';
 import {Run, Square} from './types';
 
 interface Node<T> extends Square<T> {
+  value: T;
   /** True iff the square is not further subdivided. */
   leaf: boolean;
 }

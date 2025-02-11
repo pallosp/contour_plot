@@ -2,10 +2,10 @@
  * Represents a rectangle area with no specific semantics.
  */
 export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 /**
