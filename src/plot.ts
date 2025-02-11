@@ -72,32 +72,34 @@ export class Plot<T> {
     domain = state.domain;
     sampleSpacing = state.sampleSpacing;
 
+    const overlap = overlappingArea(domain, prevState.domain);
     const reuse = sampleSpacing === prevState.sampleSpacing &&
-        pixelSize === prevState.pixelSize &&
-        overlappingArea(domain, prevState.domain) ===
-            domain.width * domain.height;
-    let prevSize = 0;
+        pixelSize === prevState.pixelSize && overlap > 0;
+    this.stats.newCalls = 0;
     let reusedArea = 0;
+
     if (reuse) {
-      if (canReuseAllNodes(state, prevState)) {
+      if (haveSameBoundaries(state, prevState)) {
         state.nodes = prevState.nodes;
       } else {
-        copyNodesFiltered(prevState.nodes, state);
+        this.computeGrid(state, prevState);
+        copyNodesFiltered(prevState, state, this.queue);
       }
       if (pixelSize === prevState.pixelSize) {
-        reusedArea = overlappingArea(domain, prevState.domain);
+        reusedArea = overlap;
       }
-      prevSize = state.nodes.size;
     } else {
-      const shouldEnqueue = pixelSize < sampleSpacing;
-      this.computeGrid(state, shouldEnqueue);
+      this.computeGrid(state, EMPTY_STATE as State<T>);
     }
 
     this.state = state;
-    this.traverse();
+    if (pixelSize < sampleSpacing) {
+      this.traverse();
+    } else {
+      this.queue.length = 0;
+    }
 
     this.stats.size = state.nodes.size;
-    this.stats.newCalls = state.nodes.size - prevSize;
     this.stats.newArea =
         (domain.width * domain.height - reusedArea) / pixelSize ** 2;
     this.stats.elapsedMs = performance.now() - startTime;
@@ -204,25 +206,38 @@ export class Plot<T> {
 
   /**
    * Computes the function at the grid points `state.sampleSpacing` apart.
-   * Optionally adds the created quadtree nodes to the traversal queue.
+   * Reuses already computed nodes from prevState. Adds the newly created nodes
+   * to the traversal queue.
    */
-  private computeGrid(state: State<T>, enqueue: boolean) {
+  private computeGrid(state: State<T>, prevState: State<T>) {
     const {nodes, domain, sampleSpacing, cx, cy} = state;
     const {func, queue} = this;
 
     const xStart = domain.x + sampleSpacing / 2;
-    const xStop = domain.x + domain.width;
+    const xStop = xStart + domain.width;
     const yStart = domain.y + sampleSpacing / 2;
-    const yStop = domain.y + domain.height;
+    const yStop = yStart + domain.height;
+
+    const prevNodes = prevState.nodes.size > 0 ? prevState.nodes : undefined;
+    const prevCx = prevState.cx;
+    const prevCy = prevState.cy;
+
+    let funcCalls = 0;
 
     for (let y = yStart; y < yStop; y += sampleSpacing) {
       for (let x = xStart; x < xStop; x += sampleSpacing) {
         const key = cx * x + cy * y;
-        const node = {x, y, size: sampleSpacing, value: func(x, y), leaf: true};
+        let node = prevNodes?.get(prevCx * x + prevCy * y);
+        if (node === undefined) {
+          node = {x, y, size: sampleSpacing, value: func(x, y), leaf: true};
+          queue.push(node);
+          funcCalls++;
+        }
         nodes.set(key, node);
-        if (enqueue) queue.push(node);
       }
     }
+
+    this.stats.newCalls += funcCalls;
   }
 
   private addChildren(x: number, y: number, size: number) {
@@ -252,6 +267,7 @@ export class Plot<T> {
     nodes.set(key, leaf4);
 
     this.queue.push(leaf1, leaf2, leaf3, leaf4);
+    this.stats.newCalls += 4;
   }
 
   /**
@@ -399,28 +415,77 @@ function createState<T>(
   return {nodes, domain, sampleSpacing, pixelSize, cx, cy};
 }
 
-function canReuseAllNodes<T>(state: State<T>, prevState: State<T>): boolean {
-  const prevDomain = prevState.domain;
-  const prevArea = prevDomain.width * prevDomain.height;
-  return state.sampleSpacing >= prevState.sampleSpacing &&
-      state.pixelSize <= prevState.pixelSize &&
-      overlappingArea(state.domain, prevDomain) === prevArea;
+/**
+ * Tells whether the two states have the same domain, sample spacing and pixel
+ * size.
+ */
+function haveSameBoundaries(
+    state1: State<unknown>, state2: State<unknown>): boolean {
+  const d1 = state1.domain;
+  const d2 = state2.domain;
+  return d1.x === d2.x && d1.y === d2.y && d1.width === d2.width &&
+      d1.height === d2.height && state1.pixelSize === state2.pixelSize &&
+      state1.sampleSpacing === state2.sampleSpacing;
 }
 
 /**
- * Copies the nodes that meet the constraints of `state` from `sourceNodes`
- * to `state.nodes`.
+ * Copies the nodes that meet the constraints of the target state from
+ * `source.nodes` to `target.nodes`. Adds the nodes at the target boundary to
+ * the traversal queue.
  */
-function copyNodesFiltered<T>(sourceNodes: NodeMap<T>, state: State<T>) {
-  const {nodes, domain, sampleSpacing, pixelSize, cx, cy} = state;
-  const {x, y} = domain;
-  const right = x + domain.width;
-  const bottom = y + domain.height;
+function copyNodesFiltered<T>(
+    source: State<T>, target: State<T>, queue: Array<Node<T>>) {
+  const {nodes, domain, sampleSpacing, cx, cy} = target;
 
-  for (const node of sourceNodes.values()) {
-    if (node.x > x && node.x < right && node.y > y && node.y < bottom &&
-        node.size >= pixelSize && node.size <= sampleSpacing) {
-      nodes.set(node.x * cx + node.y * cy, node);
+  const x0 = domain.x;
+  const y0 = domain.y;
+  const x1 = x0 + domain.width;
+  const y1 = y0 + domain.height;
+
+  const sd = source.domain;
+  const sx0 = sd.x;
+  const sy0 = sd.y;
+  const sx1 = sx0 + sd.width;
+  const sy1 = sy0 + sd.height;
+
+  for (const node of source.nodes.values()) {
+    const {x, y, size} = node;
+    if (size >= sampleSpacing) continue;
+    let enqueue = false;
+
+    if (x0 >= sx0) {
+      if (x < x0) continue;
+    } else {
+      if (x < sx0 + sampleSpacing - 2 * size) continue;
+      if (x < sx0 + sampleSpacing) enqueue = true;
+      if (x < sx0 + sampleSpacing - size / 2) node.leaf = true;
     }
+
+    if (y0 >= sy0) {
+      if (y < y0) continue;
+    } else {
+      if (y < sy0 + sampleSpacing - 2 * size) continue;
+      if (y < sy0 + sampleSpacing) enqueue = true;
+      if (y < sy0 + sampleSpacing - size / 2) node.leaf = true;
+    }
+
+    if (x1 <= sx1) {
+      if (x > x1) continue;
+    } else {
+      if (x > sx1 - sampleSpacing + 2 * size) continue;
+      if (x > sx1 - sampleSpacing) enqueue = true;
+      if (x > sx1 - sampleSpacing + size / 2) node.leaf = true;
+    }
+
+    if (y1 <= sy1) {
+      if (y > y1) continue;
+    } else {
+      if (y > sy1 - sampleSpacing + 2 * size) continue;
+      if (y > sy1 - sampleSpacing) enqueue = true;
+      if (y > sy1 - sampleSpacing + size / 2) node.leaf = true;
+    }
+
+    nodes.set(x * cx + y * cy, node);
+    if (enqueue) queue.push(node);
   }
 }

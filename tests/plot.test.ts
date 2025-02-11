@@ -405,8 +405,8 @@ test('computeStats', () => {
   stats = plot.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1).computeStats();
   expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
   expect(stats.size).toBe(20);
-  expect(stats.newCalls).toBe(20);
-  expect(stats.newArea).toBe(16);
+  expect(stats.newCalls).toBe(10);
+  expect(stats.newArea).toBe(8);
 
   // shrunk domain
   stats = plot.compute({x: 0, y: 2, width: 4, height: 2}, 2, 1).computeStats();
