@@ -38,7 +38,7 @@ test('zero state', () => {
   expect(plot.squares()).toEqual([]);
   expect(plot.runs()).toEqual([]);
   expect(plot.computeStats())
-      .toEqual({size: 0, deltaSize: 0, affectedPixels: 0, elapsedMs: 0});
+      .toEqual({size: 0, newCalls: 0, newArea: 0, elapsedMs: 0});
 });
 
 test('rejects negative domain dimensions', () => {
@@ -391,36 +391,36 @@ test('computeStats', () => {
       plot.compute({x: 0, y: 0, width: 4, height: 2}, 2, 1).computeStats();
   expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
   expect(stats.size).toBe(10);
-  expect(stats.deltaSize).toBe(10);
-  expect(stats.affectedPixels).toBe(8);
+  expect(stats.newCalls).toBe(10);
+  expect(stats.newArea).toBe(8);
 
   // no change
   stats = plot.compute({x: 0, y: 0, width: 4, height: 2}, 2, 1).computeStats();
   expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
   expect(stats.size).toBe(10);
-  expect(stats.deltaSize).toBe(0);
-  expect(stats.affectedPixels).toBe(0);
+  expect(stats.newCalls).toBe(0);
+  expect(stats.newArea).toBe(0);
 
   // extended domain
   stats = plot.compute({x: 0, y: 0, width: 4, height: 4}, 2, 1).computeStats();
   expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
   expect(stats.size).toBe(20);
-  // Incremental recomputation not implemented yet
-  expect(stats.deltaSize).toBe(20);
-  expect(stats.affectedPixels).toBe(16);
+  expect(stats.newCalls).toBe(20);
+  expect(stats.newArea).toBe(16);
 
   // shrunk domain
   stats = plot.compute({x: 0, y: 2, width: 4, height: 2}, 2, 1).computeStats();
   expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
   expect(stats.size).toBe(10);
-  expect(stats.deltaSize).toBe(0);
-  expect(stats.affectedPixels).toBe(0);
+  expect(stats.newCalls).toBe(0);
+  expect(stats.newArea).toBe(0);
 
   // larger pixels
   stats = plot.compute({x: 0, y: 2, width: 4, height: 2}, 2, 2).computeStats();
   expect(stats.elapsedMs).toBeGreaterThanOrEqual(0);
   expect(stats.size).toBe(2);
-  expect(stats.deltaSize).toBe(2);
+  expect(stats.newCalls).toBe(2);
+  expect(stats.newArea).toBe(2);
 });
 
 test.skip('A/B regression test for experimental features', () => {

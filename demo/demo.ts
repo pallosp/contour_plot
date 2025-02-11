@@ -154,14 +154,13 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const computeTime = computeStats.elapsedMs;
   const postprocessTime = startDraw - startPostprocess;
   const renderTime = Date.now() - startDraw;
-  const evalCount = computeStats.deltaSize;
+  const evalCount = computeStats.newCalls;
   const rectCount = squares.length + runs.length;
-  const pixelPerEval =
-      Math.round(computeStats.affectedPixels * 10 / evalCount) / 10;
+  const pixelPerEval = Math.round(computeStats.newArea * 10 / evalCount) / 10;
   const svgSize = Math.round(chart.innerHTML.length / 1024);
 
-  if (computeStats.deltaSize > 0 || useBlocks != lastUseBlocks) {
-    const computeStatsText = computeStats.deltaSize > 0 ?
+  if (computeStats.newCalls > 0 || useBlocks != lastUseBlocks) {
+    const computeStatsText = computeStats.newCalls > 0 ?
         `Computed f(x,y) ${evalCount} times, once for every ${
             pixelPerEval} pixels in ${Math.round(computeTime)} ms. ` :
         '';

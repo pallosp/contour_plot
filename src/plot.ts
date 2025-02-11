@@ -26,9 +26,13 @@ interface State<T> {
 }
 
 export interface ComputeStats {
+  // Number of stored function values.
   size: number;
-  deltaSize: number;
-  affectedPixels: number;
+  // Number of evaluations of the plotted function during the (re)computation.
+  newCalls: number;
+  // Number of pixels in the (re)computed area.
+  newArea: number;
+  // Elapsed time.
   elapsedMs: number;
 }
 
@@ -44,7 +48,7 @@ const NON_UNIFORM = Symbol();
 export class Plot<T> {
   private state = EMPTY_STATE as State<T>;
   private stats:
-      ComputeStats = {size: 0, deltaSize: 0, affectedPixels: 0, elapsedMs: 0};
+      ComputeStats = {size: 0, newCalls: 0, newArea: 0, elapsedMs: 0};
 
   /**
    * LIFO queue of quadtree nodes for which the plotted function's value has
@@ -93,8 +97,8 @@ export class Plot<T> {
     this.traverse();
 
     this.stats.size = state.nodes.size;
-    this.stats.deltaSize = state.nodes.size - prevSize;
-    this.stats.affectedPixels =
+    this.stats.newCalls = state.nodes.size - prevSize;
+    this.stats.newArea =
         (domain.width * domain.height - reusedArea) / pixelSize ** 2;
     this.stats.elapsedMs = performance.now() - startTime;
 
