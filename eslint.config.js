@@ -8,6 +8,14 @@ export default [
     rules: {
       'no-alert': 'error',
       'no-console': ['error', {allow: ['info', 'warn', 'error', 'table']}],
+      'no-restricted-syntax': [
+        'error', {
+          'selector':
+              'CallExpression[callee.object.name="test"][callee.property.name="only"]',
+          'message':
+              'Do not use test.only as it may accidentally skip other tests.'
+        }
+      ],
       'prefer-const': ['error', {'destructuring': 'all'}],
     },
   },
