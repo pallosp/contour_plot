@@ -13,27 +13,34 @@ type NodeMap<T> = Map<number, Node<T>>;
 
 /** Plot state. */
 interface State<T> {
-  // Nodes of the underlying quadtree, keyed by x * cx + y * cy
+  /** Nodes of the underlying quadtree, keyed by x * cx + y * cy */
   nodes: NodeMap<T>;
-  // Domain rectangle aligned to a multiple of sampleSpacing
+  /** Domain rectangle aligned to a multiple of sampleSpacing */
   readonly domain: Rect;
-  // Initial density of the points to evaluate.
+  /** Initial density of the points to evaluate */
   readonly sampleSpacing: number;
-  // Maximum density of the points to evaluate.
+  /** Maximum density of the points to evaluate */
   readonly pixelSize: number;
-  // Coefficients to map valid (x, y) points in the domain to distinct integers
+  /**
+   * x-coefficient of the linear function that maps valid (x, y) points in the
+   * domain to distinct integers
+   */
   readonly cx: number;
+  /**
+   * y-coefficient of the linear function that maps valid (x, y) points in the
+   * domain to distinct integers
+   */
   readonly cy: number;
 }
 
 export interface ComputeStats {
-  // Number of stored function values.
+  /** Number of stored function values. */
   size: number;
-  // Number of evaluations of the plotted function during the (re)computation.
+  /** Number of evaluations of the plotted function during the computation. */
   newCalls: number;
-  // Number of pixels in the (re)computed area.
+  /** Number of pixels in the (re)computed area. */
   newArea: number;
-  // Elapsed time.
+  /** Elapsed time. */
   elapsedMs: number;
 }
 
