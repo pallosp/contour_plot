@@ -2,7 +2,11 @@
  * @jest-environment jsdom
  */
 
-import {squaresToSvg} from '../src/render';
+import {runsToSvg, squaresToSvg} from '../src/render';
+
+test('runsToSvg, empty', () => {
+  expect(runsToSvg([], () => {})).toEqual([]);
+});
 
 test('squaresToSvg, empty', () => {
   expect(squaresToSvg([], () => {})).toEqual([]);

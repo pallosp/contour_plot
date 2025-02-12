@@ -93,6 +93,7 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
 export function runsToSvg<T>(
     runs: Array<Run<T>>,
     addStyles: (element: SVGElement, value: T) => void): SVGElement[] {
+  if (runs.length === 0) return [];
   const scale = greatestPow2Divisor(runs[0].y);
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
