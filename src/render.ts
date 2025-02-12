@@ -29,6 +29,7 @@ export function squaresToSvg<T>(
       squaresBySize.set(square.size, [square]);
     }
   }
+
   const pathElements: SVGPathElement[] = [];
   for (const squaresBySize of squareMap.values()) {
     for (const group of squaresBySize.values()) {
@@ -54,35 +55,24 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
   // The algorithm below implements run-length encoding, which yields ~40%
   // shorter output compared to the naive algorithm, i.e.
   // squares.map(s => `M${s.x} ${s.y}h0`).join('')
-  const size = squares[0].size;
-  const scale = 1 / size;
-  const d: string[] = [];
-  let last = {x: 0} as Square<unknown>;
-  let h = 0;
   squares.sort((s1, s2) => s1.y - s2.y || s1.x - s2.x);
-  squares.push({} as Square<unknown>);
-  for (const square of squares) {
-    if (square.y === last.y) {
-      if (square.x === last.x + size) {
-        h++;
-      } else {
-        d.push(`h${h}m${(square.x - last.x) * scale} 0`);
-        h = 0;
-      }
+
+  const {x, y, size} = squares[0];
+  const scale = 1 / size;
+  const d: string[] = [`m${x * scale} ${y * scale}`];
+  let last = {x: x - size, y};
+  let h = -1;
+
+  for (const sq of squares) {
+    if (sq.y === last.y && sq.x === last.x + size) {
+      h++;
     } else {
-      if (last.y !== undefined) {
-        d.push(`h${h}`);
-        h = 0;
-      }
-      if (square.y !== undefined) {
-        d.push(
-            `m${(square.x - last.x) * scale} ${
-                (square.y - (last.y ?? 0)) * scale}`,
-        );
-      }
+      d.push(`h${h}m${(sq.x - last.x) * scale} ${(sq.y - last.y) * scale}`);
+      h = 0;
     }
-    last = square;
+    last = sq;
   }
+  d.push(`h${h}`);
   return d.join('');
 }
 
