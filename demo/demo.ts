@@ -94,7 +94,7 @@ function plotMandelbrot() {
   plotFunction({
     name: 'mandelbrot-set',
     plot: new Plot(mandelbrot),
-    sampleSpacing: 1 / 2,
+    sampleSpacing: 1 / 4,
     addStyles: (el, value) => {
       el.style.stroke = '#' + (value % 6 * 3).toString(16).repeat(3);
     },
