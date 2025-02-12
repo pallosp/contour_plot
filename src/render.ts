@@ -13,7 +13,8 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
  */
 export function squaresToSvg<T>(
     squares: Array<Square<T>>,
-    addStyles: (element: SVGElement, value: T) => void): SVGElement[] {
+    addStyles: (element: SVGElement, value: T) => void,
+    options?: {edges?: boolean}): SVGElement[] {
   const squareMap = new Map<T, Map<number, Array<Square<T>>>>();
   for (const square of squares) {
     let squaresBySize = squareMap.get(square.value);
@@ -33,7 +34,11 @@ export function squaresToSvg<T>(
     for (const group of squaresBySize.values()) {
       const path = document.createElementNS(SVG_NAMESPACE, 'path');
       path.setAttribute('d', sameSizeSquaresToPathDef(group));
-      path.setAttribute('shape-rendering', 'crispEdges');
+      if (options?.edges) {
+        path.setAttribute('stroke-width', '.9px')
+      } else {
+        path.setAttribute('shape-rendering', 'crispEdges');
+      }
       path.setAttribute('stroke-linecap', 'square');
       if (group[0].size !== 1) {
         path.setAttribute('transform', `scale(${group[0].size})`);

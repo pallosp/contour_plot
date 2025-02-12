@@ -144,15 +144,9 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const squares = useBlocks ? plot.squares() : [];
 
   const startDraw = Date.now();
-  const svgElements =
-      useBlocks ? squaresToSvg(squares, addStyles) : runsToSvg(runs, addStyles);
-  if (useBlocks) {
-    // Show the edges of the building blocks.
-    for (const el of svgElements) {
-      el.setAttribute('stroke-width', '0.9px');
-      el.removeAttribute('shape-rendering');
-    }
-  }
+  const svgElements = useBlocks ?
+      squaresToSvg(squares, addStyles, {edges: true}) :
+      runsToSvg(runs, addStyles);
   const chart = document.getElementById('chart')!;
   chart.textContent = '';
   chart.append(...svgElements);
