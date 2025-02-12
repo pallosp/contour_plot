@@ -163,9 +163,9 @@ export class Plot<T> {
   }
 
   /**
-   * Returns the plot as a list of "runs". Each run is a horizontal line
-   * aligned to the center of the "pixels", along which the plotted function's
-   * value is considered constant.
+   * Returns the plot as a list of lexicographically sorted "runs". Each run is
+   * a horizontal line aligned to the center of the "pixels", along which the
+   * plotted function's value is considered constant.
    */
   public runs(): Array<Run<T>> {
     const {cx, cy, domain, nodes, pixelSize} = this.state;
