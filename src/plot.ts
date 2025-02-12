@@ -133,21 +133,23 @@ export class Plot<T> {
   /**
    * Returns a list of squares that cover the domain rectangle without overlap,
    * and within each square the plotted function evaluates to the same value.
-   * When compression is enabled, merges equal valued neighboring squares.
+   *
+   * Merges equal valued neighboring squares by default. Pass `{all: true}` to
+   * list all squares.
    */
-  public squares(compress = true): Array<Square<T>> {
+  public squares(options: {all?: boolean} = {}): Array<Square<T>> {
     const squares: Array<Square<T>> = [];
     const {nodes, sampleSpacing} = this.state;
-    if (compress) {
+    if (options.all) {
+      for (const node of nodes.values()) {
+        if (node.leaf) squares.push(node);
+      }
+    } else {
       for (const node of nodes.values()) {
         if (node.size < sampleSpacing) break;
         if (this.collectSquares(node, squares) !== NON_UNIFORM) {
           squares.push(node);
         }
-      }
-    } else {
-      for (const node of nodes.values()) {
-        if (node.leaf) squares.push(node);
       }
     }
     return squares;

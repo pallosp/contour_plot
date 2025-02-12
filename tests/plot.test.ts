@@ -101,7 +101,7 @@ test('invalid pixel size', () => {
 test('plot compression', () => {
   const plot = new Plot((x, y) => x == y && x < 2);
   plot.compute(VIEWPORT_4X4, 2, 1);
-  expect(plot.squares(/* compress= */ false).length).toEqual(13);
+  expect(plot.squares({all: true}).length).toEqual(13);
   expect(plot.squares().length).toEqual(7);
   expect(plot.squares().sort(compareSquares)).toEqual([
     expect.objectContaining({x: 0.5, y: 0.5, size: 1, value: true}),
@@ -121,7 +121,7 @@ test('plot compression', () => {
 test('4x4 viewport, 0 ≤ x = y ≤ 2', () => {
   const plot = new Plot((x, y) => x == y && x < 2);
   plot.compute(VIEWPORT_4X4, 2, 1);
-  expect(plot.squares(/* compress= */ false).length).toEqual(13);
+  expect(plot.squares({all: true}).length).toEqual(13);
 });
 
 test('4x4 viewport, x=y=0 or x=y=1, pixel size=2', () => {
@@ -377,7 +377,7 @@ test('nodes stay balanced after resizing domain, random', () => {
           `New domain: x: ${domain2.x}, y: ${domain2.y}, width: ${
               domain2.width}, height: ${domain2.height}\n\n` +
           `Function: ${a}x + ${b}y + ${c} > 0\n` +
-          squaresToText(plot.squares(false), 1));
+          squaresToText(plot.squares({all: true}), 1));
       throw e;
     }
   }

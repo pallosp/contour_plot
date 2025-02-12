@@ -48,10 +48,10 @@ bench.add('Mandelbrot compute', () => {
   new Plot(mandelbrot).compute(viewport, SAMPLE_SPACING, PIXEL_SIZE);
 });
 bench.add('Mandelbrot all □', () => {
-  mandelbrotPlot.squares(/* compress= */ false);
+  mandelbrotPlot.squares({all: true});
 });
 bench.add('Mandelbrot compressed □', () => {
-  mandelbrotPlot.squares(/* compress= */ true);
+  mandelbrotPlot.squares();
 });
 bench.add('Mandelbrot runs', () => {
   mandelbrotPlot.runs();
