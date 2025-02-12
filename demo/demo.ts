@@ -51,7 +51,7 @@ function plotRandomLines() {
       el.classList.add(value ? 'outside' : 'perimeter');
     },
     zoom,
-  } as PlotParams<boolean>);
+  });
 }
 
 function circleAt([cx, cy, r]: [number, number, number], x: number, y: number) {
@@ -99,7 +99,7 @@ function plotMandelbrot() {
       el.style.stroke = '#' + (value % 6 * 3).toString(16).repeat(3);
     },
     zoom,
-  } as PlotParams<number>);
+  });
 }
 
 function plotSinCos() {
@@ -113,7 +113,7 @@ function plotSinCos() {
       el.style.stroke = '#' + ((value + 3) * 3).toString(16).repeat(3);
     },
     zoom,
-  } as PlotParams<number>);
+  });
 }
 
 function roundDownToPow2(x: number): number {
