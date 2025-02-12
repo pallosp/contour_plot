@@ -1,5 +1,5 @@
 import {Plot} from '../src/plot';
-import {booleanSquaresToText} from '../src/render';
+import {squaresToText} from '../src/render';
 import {Square} from '../src/types';
 
 const VIEWPORT_4X4 = {
@@ -377,7 +377,7 @@ test('nodes stay balanced after resizing domain, random', () => {
           `New domain: x: ${domain2.x}, y: ${domain2.y}, width: ${
               domain2.width}, height: ${domain2.height}\n\n` +
           `Function: ${a}x + ${b}y + ${c} > 0\n` +
-          booleanSquaresToText(plot.squares(false), 1));
+          squaresToText(plot.squares(false), 1));
       throw e;
     }
   }
