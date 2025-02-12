@@ -4,6 +4,7 @@
     "useDefineForClassFields": false,
     "module": "ESNext",
     "lib": [
+      "ES2024",
       "DOM",
     ],
     "skipLibCheck": true,
