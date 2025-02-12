@@ -232,11 +232,11 @@ const BLACK_BOX_ELEMENTS =
  * pixelSize` characters tall.
  */
 export function squaresToText<T>(
-    squares: Array<Square<T>>, pixelSize?: number): string {
+    squares: Array<Square<T>>, options?: {pixelSize?: number}): string {
   if (squares.length === 0) return '';
   const sq = squares[0];
-  let x0 = sq.x, x1 = sq.x, y0 = sq.y, y1 = sq.y, minSize = sq.size;
-  if (pixelSize !== undefined) minSize = pixelSize;
+  let x0 = sq.x, x1 = sq.x, y0 = sq.y, y1 = sq.y;
+  let minSize = options?.pixelSize ?? sq.size;
   for (const {x, y, size} of squares) {
     const r = size / 2;
     if (x - r < x0) x0 = x - r;

@@ -377,7 +377,7 @@ test('nodes stay balanced after resizing domain, random', () => {
           `New domain: x: ${domain2.x}, y: ${domain2.y}, width: ${
               domain2.width}, height: ${domain2.height}\n\n` +
           `Function: ${a}x + ${b}y + ${c} > 0\n` +
-          squaresToText(plot.squares({all: true}), 1));
+          squaresToText(plot.squares({all: true}), {pixelSize: 1}));
       throw e;
     }
   }

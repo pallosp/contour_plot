@@ -121,7 +121,7 @@ test('squaresToText, numeric values', () => {
 test('squaresToText, custom pixelSize', () => {
   const square1 = {x: 0.5, y: 0.5, size: 1, value: false};
   const square2 = {x: 1.5, y: 0.5, size: 1, value: true};
-  expect(squaresToText([square1, square2], 0.5))
+  expect(squaresToText([square1, square2], {pixelSize: 0.5}))
       .toBe(
           '┌─┐ ▗▄▖ \n' +
           '└─┘ ▝▀▘ ');
