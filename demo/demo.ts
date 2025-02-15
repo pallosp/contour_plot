@@ -7,7 +7,7 @@ type PlotParams<T> = {
   name: string,
   plot: Plot<T>,
   sampleSpacing: number,
-  addStyles: (element: SVGElement, value: T) => void,
+  addStyles: (element: SVGGraphicsElement, value: T) => void,
   zoom: number,
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
