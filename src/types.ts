@@ -18,12 +18,12 @@ export interface Square<T> {
  * considered constant.
  */
 export interface Run<T> {
-  /** x-coordinate of the leftmost point */
-  xMin: number;
-  /** x-coordinate of the rightmost point */
-  xMax: number;
+  /** x-coordinate of the start point */
+  readonly x0: number;
+  /** x-coordinate of the end point */
+  readonly x1: number;
   /** y-coordinate of the line */
-  y: number;
+  readonly y: number;
   /** value of the plotted function over the run */
-  value: T;
+  readonly value: T;
 }

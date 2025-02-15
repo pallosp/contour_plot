@@ -9,20 +9,18 @@ test('runsToSvg, empty', () => {
 });
 
 test('runsToSvg, y=0', () => {
-  expect(() => runsToSvg([{xMin: 0, xMax: 1, y: 0, value: 1}], () => {}))
-      .toThrow();
+  expect(() => runsToSvg([{x0: 0, x1: 1, y: 0, value: 1}], () => {})).toThrow();
 });
 
 test('runsToSvg, x>0', () => {
-  const svgElements =
-      runsToSvg([{xMin: 3, xMax: 5, y: 1.5, value: 1}], () => {});
+  const svgElements = runsToSvg([{x0: 3, x1: 5, y: 1.5, value: 1}], () => {});
   expect(svgElements.length).toBe(1);
   expect(svgElements[0].children.length).toBe(1);
   expect(svgElements[0].children[0].getAttribute('d')).toBe('m3 1.5h2');
 });
 
 test('runsToSvg, zoomed in', () => {
-  const svgElements = runsToSvg([{xMin: 2, xMax: 6, y: 1, value: 1}], () => {});
+  const svgElements = runsToSvg([{x0: 2, x1: 6, y: 1, value: 1}], () => {});
   expect(svgElements.length).toBe(1);
   expect(svgElements[0].getAttribute('transform')).toBe('scale(2)');
   expect(svgElements[0].children.length).toBe(1);
@@ -30,8 +28,7 @@ test('runsToSvg, zoomed in', () => {
 });
 
 test('runsToSvg, zoomed out', () => {
-  const svgElements =
-      runsToSvg([{xMin: 2, xMax: 6, y: 0.25, value: 1}], () => {});
+  const svgElements = runsToSvg([{x0: 2, x1: 6, y: 0.25, value: 1}], () => {});
   expect(svgElements.length).toBe(1);
   expect(svgElements[0].getAttribute('transform')).toBe('scale(0.5)');
   expect(svgElements[0].children.length).toBe(1);
@@ -41,8 +38,8 @@ test('runsToSvg, zoomed out', () => {
 test('runsToSvg, multiple values', () => {
   const svgElements = runsToSvg(
       [
-        {xMin: 0, xMax: 2, y: 0.5, value: 1},
-        {xMin: 0, xMax: 2, y: 1.5, value: 2}
+        {x0: 0, x1: 2, y: 0.5, value: 1},
+        {x0: 0, x1: 2, y: 1.5, value: 2},
       ],
       () => {});
   expect(svgElements.length).toBe(2);
@@ -55,9 +52,9 @@ test('runsToSvg, multiple values', () => {
 test('runsToSvg, zigzag optimization', () => {
   const svgElements = runsToSvg(
       [
-        {xMin: 0, xMax: 2, y: 0.5, value: 1},
-        {xMin: 0, xMax: 2, y: 1.5, value: 1},
-        {xMin: 0, xMax: 2, y: 2.5, value: 1},
+        {x0: 0, x1: 2, y: 0.5, value: 1},
+        {x0: 0, x1: 2, y: 1.5, value: 1},
+        {x0: 0, x1: 2, y: 2.5, value: 1},
       ],
       () => {});
   expect(svgElements.length).toBe(1);

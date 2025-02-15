@@ -139,9 +139,9 @@ function runsToPathDefs(runs: Array<Run<unknown>>, zoom: number): string[] {
   const pathDefs: string[] = [];
   let d: string[] = [];
   for (const run of runs) {
-    if (run.xMax === lastX) {
-      d.push(`m0 ${(run.y - lastY) * zoom}h${(run.xMin - run.xMax) * zoom}`);
-      lastX = run.xMin;
+    if (run.x1 === lastX) {
+      d.push(`m0 ${(run.y - lastY) * zoom}h${(run.x0 - run.x1) * zoom}`);
+      lastX = run.x0;
     } else {
       if (run.y > lastY) {
         if ((++rows) % 64 === 0) {
@@ -152,10 +152,10 @@ function runsToPathDefs(runs: Array<Run<unknown>>, zoom: number): string[] {
         }
       }
       d.push(
-          `m${(run.xMin - lastX) * zoom} ${(run.y - lastY) * zoom}h${
-              (run.xMax - run.xMin) * zoom}`,
+          `m${(run.x0 - lastX) * zoom} ${(run.y - lastY) * zoom}h${
+              (run.x1 - run.x0) * zoom}`,
       );
-      lastX = run.xMax;
+      lastX = run.x1;
     }
     lastY = run.y;
   }
@@ -201,10 +201,10 @@ export function runsToBitmap<T>(
   const bitmap = createBitmap<T>(viewport.width, viewport.height);
   const top = viewport.y + 0.5;
   const bottom = viewport.y + viewport.height - 0.5;
-  for (const {xMin, xMax, y, value} of runs) {
+  for (const {x0, x1, y, value} of runs) {
     if (y >= top && y <= bottom) {
-      const start = xMin - 0.5 - viewport.x;
-      const stop = xMax + 0.5 - viewport.x;
+      const start = x0 - 0.5 - viewport.x;
+      const stop = x1 + 0.5 - viewport.x;
       bitmap[y - top].fill(value, Math.max(start, 0), stop);
     }
   }

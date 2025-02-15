@@ -179,15 +179,15 @@ export class Plot<T> {
 
     for (let y = yMin + pixelSize / 2; y < yMax; y += pixelSize) {
       let lastNode = this.leafAt(xMin + pixelSize / 2, y);
-      let lastRun: Run<T> = {
-        xMin,
-        xMax: xMin + lastNode.size,
+      let lastRun = {
+        x0: xMin,
+        x1: xMin + lastNode.size,
         y,
         value: lastNode.value,
       };
       runs.push(lastRun);
 
-      while (lastRun.xMax < xMax) {
+      while (lastRun.x1 < xMax) {
         const rightX = lastNode.x + lastNode.size;
         const rightY = lastNode.y;
         let node = nodes.get(cx * rightX + cy * rightY);
@@ -204,11 +204,11 @@ export class Plot<T> {
         }
 
         if (node.value === lastNode.value) {
-          lastRun.xMax += node.size;
+          lastRun.x1 += node.size;
         } else {
           lastRun = {
-            xMin: lastRun.xMax,
-            xMax: lastRun.xMax + node.size,
+            x0: lastRun.x1,
+            x1: lastRun.x1 + node.size,
             y,
             value: node.value,
           };
