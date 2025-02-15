@@ -142,3 +142,11 @@ test('squaresToSvg, multiple rows', () => {
   expect(svgElements[0].getAttribute('d')).toBe('m0.5 0.5h0m1 1h0');
   expect(svgElements[1].getAttribute('d')).toBe('m1.5 0.5h0m-1 1h0');
 });
+
+test('squaresToSvg, showing edges', () => {
+  const svgElements = squaresToSvg(
+      [{x: 0.5, y: 0.5, size: 1, value: 0}], () => {}, {edges: true});
+  expect(svgElements.length).toBe(1);
+  expect(svgElements[0].getAttribute('d')).toBe('m0.5 0.5h0');
+  expect(svgElements[0].getAttribute('stroke-width')).toBe('.9px');
+});
