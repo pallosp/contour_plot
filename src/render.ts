@@ -5,6 +5,8 @@ import {Run, Square} from './types';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
+type AddStylesCallback<T> = (element: SVGGraphicsElement, value: T) => void;
+
 /**
  * Renders a list of squares represented by their centers, sizes and associated
  * values as SVG <path> elements. The caller can assign CSS classes or styles
@@ -14,8 +16,7 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
  * squares with the same size and value as a single SVG path.
  */
 export function squaresToSvg<T>(
-    squares: Array<Square<T>>,
-    addStyles: (element: SVGGraphicsElement, value: T) => void,
+    squares: Array<Square<T>>, addStyles: AddStylesCallback<T>,
     options?: {edges?: boolean}): SVGGraphicsElement[] {
   const squareMap = new Map<T, Map<number, Array<Square<T>>>>();
   for (const square of squares) {
@@ -89,8 +90,7 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
  */
 export function runsToSvg<T>(
     runs: Array<Run<T>>,
-    addStyles: (element: SVGGraphicsElement, value: T) =>
-        void): SVGGraphicsElement[] {
+    addStyles: AddStylesCallback<T>): SVGGraphicsElement[] {
   if (runs.length === 0) return [];
   const scale = greatestPow2Divisor(runs[0].y) * 2;
   const runsByValue = new Map<T, Array<Run<T>>>();
