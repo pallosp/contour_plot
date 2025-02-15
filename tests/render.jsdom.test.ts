@@ -8,6 +8,64 @@ test('runsToSvg, empty', () => {
   expect(runsToSvg([], () => {})).toEqual([]);
 });
 
+test('runsToSvg, y=0', () => {
+  expect(() => runsToSvg([{xMin: 0, xMax: 1, y: 0, value: 1}], () => {}))
+      .toThrow();
+});
+
+test('runsToSvg, x>0', () => {
+  const svgElements =
+      runsToSvg([{xMin: 3, xMax: 5, y: 1.5, value: 1}], () => {});
+  expect(svgElements.length).toBe(1);
+  expect(svgElements[0].children.length).toBe(1);
+  expect(svgElements[0].children[0].getAttribute('d')).toBe('m3 1.5h2');
+});
+
+test('runsToSvg, zoomed in', () => {
+  const svgElements = runsToSvg([{xMin: 2, xMax: 6, y: 1, value: 1}], () => {});
+  expect(svgElements.length).toBe(1);
+  expect(svgElements[0].getAttribute('transform')).toBe('scale(2)');
+  expect(svgElements[0].children.length).toBe(1);
+  expect(svgElements[0].children[0].getAttribute('d')).toBe('m1 0.5h2');
+});
+
+test('runsToSvg, zoomed out', () => {
+  const svgElements =
+      runsToSvg([{xMin: 2, xMax: 6, y: 0.25, value: 1}], () => {});
+  expect(svgElements.length).toBe(1);
+  expect(svgElements[0].getAttribute('transform')).toBe('scale(0.5)');
+  expect(svgElements[0].children.length).toBe(1);
+  expect(svgElements[0].children[0].getAttribute('d')).toBe('m4 0.5h8');
+});
+
+test('runsToSvg, multiple values', () => {
+  const svgElements = runsToSvg(
+      [
+        {xMin: 0, xMax: 2, y: 0.5, value: 1},
+        {xMin: 0, xMax: 2, y: 1.5, value: 2}
+      ],
+      () => {});
+  expect(svgElements.length).toBe(2);
+  expect(svgElements[0].children.length).toBe(1);
+  expect(svgElements[0].children[0].getAttribute('d')).toBe('m0 0.5h2');
+  expect(svgElements[1].children.length).toBe(1);
+  expect(svgElements[1].children[0].getAttribute('d')).toBe('m0 1.5h2');
+});
+
+test('runsToSvg, zigzag optimization', () => {
+  const svgElements = runsToSvg(
+      [
+        {xMin: 0, xMax: 2, y: 0.5, value: 1},
+        {xMin: 0, xMax: 2, y: 1.5, value: 1},
+        {xMin: 0, xMax: 2, y: 2.5, value: 1},
+      ],
+      () => {});
+  expect(svgElements.length).toBe(1);
+  expect(svgElements[0].children.length).toBe(1);
+  expect(svgElements[0].children[0].getAttribute('d'))
+      .toBe('m0 0.5h2m0 1h-2m0 1h2');
+});
+
 test('squaresToSvg, empty', () => {
   expect(squaresToSvg([], () => {})).toEqual([]);
 });

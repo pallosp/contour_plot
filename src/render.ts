@@ -1,3 +1,5 @@
+import assert from 'minimalistic-assert';
+
 import {Rect} from './rect';
 import {Run, Square} from './types';
 
@@ -13,8 +15,8 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
  */
 export function squaresToSvg<T>(
     squares: Array<Square<T>>,
-    addStyles: (element: SVGElement, value: T) => void,
-    options?: {edges?: boolean}): SVGElement[] {
+    addStyles: (element: SVGGraphicsElement, value: T) => void,
+    options?: {edges?: boolean}): SVGGraphicsElement[] {
   const squareMap = new Map<T, Map<number, Array<Square<T>>>>();
   for (const square of squares) {
     let squaresBySize = squareMap.get(square.value);
@@ -87,9 +89,10 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
  */
 export function runsToSvg<T>(
     runs: Array<Run<T>>,
-    addStyles: (element: SVGElement, value: T) => void): SVGElement[] {
+    addStyles: (element: SVGGraphicsElement, value: T) =>
+        void): SVGGraphicsElement[] {
   if (runs.length === 0) return [];
-  const scale = greatestPow2Divisor(runs[0].y);
+  const scale = greatestPow2Divisor(runs[0].y) * 2;
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
     const sameValueRuns = runsByValue.get(run.value);
@@ -99,7 +102,7 @@ export function runsToSvg<T>(
       runsByValue.set(run.value, [run]);
     }
   }
-  const svgElements: SVGElement[] = [];
+  const svgElements: SVGGraphicsElement[] = [];
   for (const runs of runsByValue.values()) {
     const g = document.createElementNS(SVG_NAMESPACE, 'g');
     g.setAttribute('shape-rendering', 'crispEdges');
@@ -118,16 +121,11 @@ export function runsToSvg<T>(
 
 /** Returns the greatest 2ⁿ (n ∈ ℤ) for which x / 2ⁿ is an integer. */
 function greatestPow2Divisor(x: number): number {
-  let divisor = 1;
-  while (x % 1 === 0) {
-    x = x / 2;
-    divisor *= 2;
-  }
-  while (x % 0.5 !== 0) {
-    x = x * 2;
-    divisor /= 2;
-  }
-  return divisor;
+  assert(x !== 0);
+  let div = 1;
+  while (x % div === 0) div *= 2;
+  while (x % div !== 0) div /= 2;
+  return div;
 }
 
 /**
