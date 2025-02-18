@@ -151,5 +151,5 @@ test('squaresToSvg, showing edges', () => {
       [{x: 0.5, y: 0.5, size: 1, value: 0}], () => {}, {edges: true});
   expect(svgElements.length).toBe(1);
   expect(svgElements[0].getAttribute('d')).toBe('m0.5 0.5h0');
-  expect(svgElements[0].getAttribute('stroke-width')).toBe('.9px');
+  expect(svgElements[0].getAttribute('stroke-width')).toBe('.9');
 });

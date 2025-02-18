@@ -44,7 +44,7 @@ export function squaresToSvg<T>(
       const path = document.createElementNS(SVG_NAMESPACE, 'path');
       path.setAttribute('d', sameSizeSquaresToPathDef(group));
       if (options?.edges) {
-        path.setAttribute('stroke-width', '.9px')
+        path.setAttribute('stroke-width', '.9')
       } else {
         path.setAttribute('shape-rendering', 'crispEdges');
       }
@@ -113,7 +113,7 @@ export function runsToSvg<T>(
   for (const runs of runsByValue.values()) {
     const g = document.createElementNS(SVG_NAMESPACE, 'g');
     g.setAttribute('shape-rendering', 'crispEdges');
-    g.setAttribute('stroke-width', '1px');
+    g.setAttribute('stroke-width', '1');
     g.setAttribute(
         'transform',
         `translate(${origin.x} ${origin.y})${
