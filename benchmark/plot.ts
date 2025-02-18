@@ -22,9 +22,9 @@ function checkerboard(x: number, y: number): boolean {
 const PIXEL_SIZE = 1 / 128;
 const SAMPLE_SPACING = 1 / 4;
 const viewport = {
-  x: -2,
+  x: 0,
   y: 0,
-  width: 4,
+  width: 1,
   height: 2
 };
 
@@ -58,14 +58,14 @@ bench.add('Mandelbrot runs', () => {
 });
 
 bench.add('Checkerboard eval ∀ px', () => {
-  for (let y = 1; y < 128; y += 2) {
-    for (let x = 1; x < 128; x += 2) {
+  for (let y = 1; y < 512; y += 2) {
+    for (let x = 1; x < 512; x += 2) {
       checkerboard(x, y);
     }
   }
 });
 bench.add('Checkerboard compute', () => {
-  new Plot(checkerboard).compute({x: 0, y: 0, width: 128, height: 128}, 16, 2);
+  new Plot(checkerboard).compute({x: 0, y: 0, width: 512, height: 256}, 32, 2);
 });
 
 await bench.run();
