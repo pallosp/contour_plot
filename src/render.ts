@@ -7,6 +7,11 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 type AddStylesCallback<T> = (element: SVGGraphicsElement, value: T) => void;
 
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
 /**
  * Renders a list of squares represented by their centers, sizes and associated
  * values as SVG <path> elements. The caller can assign CSS classes or styles
@@ -92,7 +97,9 @@ export function runsToSvg<T>(
     runs: Array<Run<T>>,
     addStyles: AddStylesCallback<T>): SVGGraphicsElement[] {
   if (runs.length === 0) return [];
-  const scale = greatestPow2Divisor(runs[0].y) * 2;
+  const halfHeight = greatestPow2Divisor(runs[0].y);
+  const origin = {x: runs[0].x0, y: runs[0].y - halfHeight};
+  const scale = halfHeight * 2;
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
     const sameValueRuns = runsByValue.get(run.value);
@@ -107,9 +114,12 @@ export function runsToSvg<T>(
     const g = document.createElementNS(SVG_NAMESPACE, 'g');
     g.setAttribute('shape-rendering', 'crispEdges');
     g.setAttribute('stroke-width', '1px');
-    g.setAttribute('transform', `scale(${scale})`);
+    g.setAttribute(
+        'transform',
+        `translate(${origin.x} ${origin.y})${
+            scale !== 1 ? ` scale(${scale})` : ''}`);
     addStyles(g, runs[0].value);
-    for (const d of runsToPathDefs(runs, 1 / scale)) {
+    for (const d of runsToPathDefs(runs, origin, 1 / scale)) {
       const path = document.createElementNS(SVG_NAMESPACE, 'path');
       path.setAttribute('d', d);
       g.append(path);
@@ -132,9 +142,10 @@ function greatestPow2Divisor(x: number): number {
  * Translates a non-empty list of runs to an SVG path definition.
  * Multiplies all coordinates by `zoom`.
  */
-function runsToPathDefs(runs: Array<Run<unknown>>, zoom: number): string[] {
-  let lastX = 0;
-  let lastY = 0;
+function runsToPathDefs(
+    runs: Array<Run<unknown>>, origin: Point, zoom: number): string[] {
+  let lastX = origin.x;
+  let lastY = origin.y;
   let rows = 0;
   const pathDefs: string[] = [];
   let d: string[] = [];
@@ -147,8 +158,8 @@ function runsToPathDefs(runs: Array<Run<unknown>>, zoom: number): string[] {
         if ((++rows) % 64 === 0) {
           pathDefs.push(d.join(''));
           d = [];
-          lastX = 0;
-          lastY = 0;
+          lastX = origin.x;
+          lastY = origin.y;
         }
       }
       d.push(

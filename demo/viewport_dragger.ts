@@ -84,8 +84,10 @@ export class ViewportDragger extends EventTarget {
   }
 
   private update() {
-    this.transformEl.style.transform = `translate(${this.translateX}px, ${
-        this.translateY}px) scale(${this.zoom})`;
+    this.transformEl.setAttribute(
+        'transform',
+        `scale(${this.zoom}) translate(${this.translateX / this.zoom}, ${
+            this.translateY / this.zoom})`);
   }
 
   private dispatchChange() {
