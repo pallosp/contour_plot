@@ -12,7 +12,7 @@ type PlotParams<T> = {
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let lastPlotParams: PlotParams<any>|undefined;
-let lastUseBlocks = false;
+let lastShowEdges = false;
 
 const svg = document.querySelector('svg')!;
 const chart = svg.querySelector<SVGElement>('#chart')!;
@@ -123,8 +123,8 @@ function roundDownToPow2(x: number): number {
 function plotFunction<T>(plotParams: PlotParams<T>) {
   let {name, plot, sampleSpacing, addStyles} = plotParams;
   history.replaceState(null, '', '?f=' + encodeURIComponent(name));
-  const useBlocks =
-      (document.getElementById('use-blocks') as HTMLInputElement).checked;
+  const showEdges =
+      (document.getElementById('show-edges') as HTMLInputElement).checked;
   let viewport = vd.viewport();
   const pixelSizeInput =
       document.querySelector<HTMLInputElement>('#pixel-size')!;
@@ -140,11 +140,11 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const computeStats = plot.computeStats();
 
   const startPostprocess = Date.now();
-  const runs = useBlocks ? [] : plot.runs();
-  const squares = useBlocks ? plot.squares() : [];
+  const runs = showEdges ? [] : plot.runs();
+  const squares = showEdges ? plot.squares() : [];
 
   const startDraw = Date.now();
-  const svgElements = useBlocks ?
+  const svgElements = showEdges ?
       squaresToSvg(squares, addStyles, {edges: true}) :
       runsToSvg(runs, addStyles);
   const chart = document.getElementById('chart')!;
@@ -155,24 +155,25 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const postprocessTime = startDraw - startPostprocess;
   const renderTime = Date.now() - startDraw;
   const evalCount = computeStats.newCalls;
-  const rectCount = squares.length + runs.length;
+  const tileCount = squares.length + runs.length;
   const pixelPerEval = Math.round(computeStats.newArea * 10 / evalCount) / 10;
   const svgSize = Math.round(chart.innerHTML.length / 1024);
 
-  if (computeStats.newCalls > 0 || useBlocks != lastUseBlocks) {
+  if (computeStats.newCalls > 0 || showEdges != lastShowEdges) {
     const computeStatsText = computeStats.newCalls > 0 ?
         `Computed f(x,y) ${evalCount} times, once for every ${
             pixelPerEval} pixels in ${Math.round(computeTime)} ms. ` :
         '';
-    const renderStatsText = `Built ${rectCount} rectangles in ${
-        postprocessTime} ms and drawn them in ${renderTime} ms. `;
+    const renderStatsText =
+        `Built ${tileCount} ${showEdges ? 'squares' : 'runs'} in ${
+            postprocessTime} ms and drawn them in ${renderTime} ms. `;
     const svgStatsText = `SVG size: ${svgSize} KiB`;
     document.querySelector('#plot-stats')!.textContent =
         computeStatsText + renderStatsText + svgStatsText;
   }
 
   lastPlotParams = plotParams;
-  lastUseBlocks = useBlocks;
+  lastShowEdges = showEdges;
 }
 
 function updatePlot() {
@@ -187,7 +188,7 @@ function main() {
   for (const name in plotters) {
     document.getElementById(name)!.onclick = plotters[name];
   }
-  document.getElementById('use-blocks')!.onclick = updatePlot;
+  document.getElementById('show-edges')!.onclick = updatePlot;
   document.getElementById('pixel-size')!.onchange = updatePlot;
   vd.addEventListener('change', updatePlot);
 
