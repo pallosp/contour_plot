@@ -149,26 +149,20 @@ function runsToPathDefs(
   let rows = 0;
   const pathDefs: string[] = [];
   let d: string[] = [];
-  for (const run of runs) {
-    if (run.x1 === lastX) {
-      d.push(`m0 ${(run.y - lastY) * zoom}h${(run.x0 - run.x1) * zoom}`);
-      lastX = run.x0;
-    } else {
-      if (run.y > lastY) {
-        if ((++rows) % 64 === 0) {
-          pathDefs.push(d.join(''));
-          d = [];
-          lastX = origin.x;
-          lastY = origin.y;
-        }
-      }
-      d.push(
-          `m${(run.x0 - lastX) * zoom} ${(run.y - lastY) * zoom}h${
-              (run.x1 - run.x0) * zoom}`,
-      );
-      lastX = run.x1;
+  for (let {x0, x1, y} of runs) {
+    if (y > lastY && (++rows) % 64 === 0) {
+      pathDefs.push(d.join(''));
+      d = [];
+      lastX = origin.x;
+      lastY = origin.y;
     }
-    lastY = run.y;
+    if (x1 === lastX) {
+      x1 = x0;
+      x0 = lastX;
+    }
+    d.push(`m${(x0 - lastX) * zoom} ${(y - lastY) * zoom}h${(x1 - x0) * zoom}`);
+    lastX = x1;
+    lastY = y;
   }
   pathDefs.push(d.join(''));
   return pathDefs;
