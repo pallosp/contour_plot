@@ -195,17 +195,17 @@ export class Plot<T> {
       while (lastRun.x1 < xMax) {
         const rightX = lastNode.x + lastNode.size;
         const rightY = lastNode.y;
-        let node = nodes.get(c0 + cy * rightY + cx * rightX);
+        let node = nodes.get((c0 + cy * rightY + cx * rightX) | 0);
         if (!node) {
           const parentSize = lastNode.size * 2;
           const parentX = rightX + parentSize / 4;
           const parentY = (Math.floor(rightY / parentSize) + 0.5) * parentSize;
-          node = nodes.get(c0 + cy * parentY + cx * parentX)!;
+          node = nodes.get((c0 + cy * parentY + cx * parentX) | 0)!;
         } else if (!node.leaf) {
           const offset = lastNode.size / 4;
           const childX = rightX - offset;
           const childY = y > rightY ? rightY + offset : rightY - offset;
-          node = nodes.get(c0 + cy * childY + cx * childX)!;
+          node = nodes.get((c0 + cy * childY + cx * childX) | 0)!;
         }
 
         if (node.value === lastNode.value) {
@@ -249,8 +249,8 @@ export class Plot<T> {
 
     for (let y = yStart; y < yStop; y += sampleSpacing) {
       for (let x = xStart; x < xStop; x += sampleSpacing) {
-        const key = c0 + cy * y + cx * x;
-        let node = prevNodes?.get(prevC0 + prevCy * y + prevCx * x);
+        const key = (c0 + cy * y + cx * x) | 0;
+        let node = prevNodes?.get((prevC0 + prevCy * y + prevCx * x) | 0);
         if (node === undefined) {
           node = {x, y, size: sampleSpacing, value: func(x, y), leaf: true};
           queue.push(node);
@@ -270,7 +270,7 @@ export class Plot<T> {
     y -= size / 4;
     size /= 2;
 
-    let key = c0 + cy * y + cx * x;
+    let key = (c0 + cy * y + cx * x) | 0;
     const leaf1 = {x, y, size, value: func(x, y), leaf: true};
     nodes.set(key, leaf1);
 
@@ -306,8 +306,8 @@ export class Plot<T> {
     const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
     const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
     const parentKey = c0 + cy * parentY + cx * parentX;
-    const xNeighbor = nodes.get(parentKey + 4 * (x - parentX) * cx);
-    const yNeighbor = nodes.get(parentKey + 4 * (y - parentY) * cy);
+    const xNeighbor = nodes.get((parentKey + 4 * (x - parentX) * cx) | 0);
+    const yNeighbor = nodes.get((parentKey + 4 * (y - parentY) * cy) | 0);
 
     if (xNeighbor?.leaf) this.subdivideLeaf(xNeighbor);
     if (yNeighbor?.leaf) this.subdivideLeaf(yNeighbor);
@@ -330,26 +330,26 @@ export class Plot<T> {
       const parentSize = size * 2;
       const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
       const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
-      const key = c0 + cy * y + cx * x;
-      const parentKey = c0 + parentY * cy + parentX * cx;
+      const key = (c0 + cy * y + cx * x) | 0;
+      const parentKey = (c0 + parentY * cy + parentX * cx) | 0;
 
       if (size === pixelSize) {
         // x/y neighbors with 2px size
-        const nx = nodes.get(parentKey + (x - parentX) * 4 * cx);
-        const ny = nodes.get(parentKey + (y - parentY) * 4 * cy);
+        const nx = nodes.get((parentKey + (x - parentX) * 4 * cx) | 0);
+        const ny = nodes.get((parentKey + (y - parentY) * 4 * cy) | 0);
         if (nx?.leaf && value !== nx.value) this.subdivideLeaf(nx);
         if (ny?.leaf && value !== ny.value) this.subdivideLeaf(ny);
         continue;
       }
 
-      const n =
-          nodes.get(key - size * cy) ?? nodes.get(parentKey - parentSize * cy);
-      const e =
-          nodes.get(key + size * cx) ?? nodes.get(parentKey + parentSize * cx);
-      const s =
-          nodes.get(key + size * cy) ?? nodes.get(parentKey + parentSize * cy);
-      const w =
-          nodes.get(key - size * cx) ?? nodes.get(parentKey - parentSize * cx);
+      const n = nodes.get((key - size * cy) | 0) ??
+          nodes.get((parentKey - parentSize * cy) | 0);
+      const e = nodes.get((key + size * cx) | 0) ??
+          nodes.get((parentKey + parentSize * cx) | 0);
+      const s = nodes.get((key + size * cy) | 0) ??
+          nodes.get((parentKey + parentSize * cy) | 0);
+      const w = nodes.get((key - size * cx) | 0) ??
+          nodes.get((parentKey - parentSize * cx) | 0);
 
       let subdivideThis = false;
       if (n && value !== n.value) {
@@ -388,10 +388,10 @@ export class Plot<T> {
     const childRadius = size / 4;
     const {c0, cx, cy, nodes} = this.state;
     const key = c0 + cy * y + cx * x;
-    const child1 = nodes.get(key + childRadius * (cx + cy))!;
-    const child2 = nodes.get(key + childRadius * (cx - cy))!;
-    const child3 = nodes.get(key - childRadius * (cx + cy))!;
-    const child4 = nodes.get(key - childRadius * (cx - cy))!;
+    const child1 = nodes.get((key + childRadius * (cx + cy)) | 0)!;
+    const child2 = nodes.get((key + childRadius * (cx - cy)) | 0)!;
+    const child3 = nodes.get((key - childRadius * (cx + cy)) | 0)!;
+    const child4 = nodes.get((key - childRadius * (cx - cy)) | 0)!;
     const v1 = this.collectSquares(child1, squares);
     const v2 = this.collectSquares(child2, squares);
     const v3 = this.collectSquares(child3, squares);
@@ -411,7 +411,8 @@ export class Plot<T> {
     let node: Node<T>|undefined;
     const state = this.state;
     let size = state.pixelSize;
-    while (!(node = state.nodes.get(state.c0 + state.cy * y + state.cx * x)) &&
+    while (!(node = state.nodes.get(
+                 (state.c0 + state.cy * y + state.cx * x) | 0)) &&
            size < state.sampleSpacing) {
       size *= 2;
       x = (Math.floor(x / size) + 0.5) * size;
@@ -512,7 +513,7 @@ function copyNodesFiltered<T>(
       if (y > sy1 - sampleSpacing + size / 2) node.leaf = true;
     }
 
-    nodes.set(c0 + y * cy + x * cx, node);
+    nodes.set((c0 + y * cy + x * cx) | 0, node);
     if (enqueue) queue.push(node);
   }
 }
