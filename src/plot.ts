@@ -190,7 +190,8 @@ export class Plot<T> {
       while (x1 < xMax) {
         const rightX = lastNode.x + lastNode.size;
         const rightY = lastNode.y;
-        let node = nodes.get((c0 + cy * rightY + cx * rightX) | 0);
+        const key = c0 + cy * rightY + cx * rightX;
+        let node = nodes.get(key | 0);
         if (!node) {
           const parentSize = lastNode.size * 2;
           const parentX = rightX + parentSize / 4;
@@ -198,18 +199,15 @@ export class Plot<T> {
           node = nodes.get((c0 + cy * parentY + cx * parentX) | 0)!;
         } else if (!node.leaf) {
           const offset = lastNode.size / 4;
-          const childX = rightX - offset;
-          const childY = y > rightY ? rightY + offset : rightY - offset;
-          node = nodes.get((c0 + cy * childY + cx * childX) | 0)!;
+          const childKey = key - offset * (y > rightY ? cx - cy : cx + cy);
+          node = nodes.get(childKey | 0)!;
         }
 
-        if (node.value === lastNode.value) {
-          x1 += node.size;
-        } else {
+        if (node.value !== lastNode.value) {
           runs.push({x0, x1, y, value: lastNode.value});
           x0 = x1;
-          x1 += node.size;
         }
+        x1 += node.size;
         lastNode = node;
       }
       runs.push({x0, x1, y, value: lastNode.value});
