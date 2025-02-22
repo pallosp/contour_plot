@@ -429,6 +429,12 @@ function createState<T>(
   const cx = 2 / pixelSize;
   const cy = domain.width / pixelSize * cx;
 
+  // Prevent key collisions due to rounding at extreme zoom levels.
+  const minKey = cx * domain.x + cy * domain.y;
+  const maxKey = minKey + cx * domain.width + cy * domain.height;
+  assert(Math.abs(minKey) < Number.MAX_SAFE_INTEGER);
+  assert(Math.abs(maxKey) < Number.MAX_SAFE_INTEGER);
+
   return {nodes, domain, sampleSpacing, pixelSize, cx, cy};
 }
 
