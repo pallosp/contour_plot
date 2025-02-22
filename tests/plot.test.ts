@@ -87,11 +87,15 @@ test('viewport not aligned with samples', () => {
 test('invalid sample spacing', () => {
   const plot = new Plot(() => 0);
   expect(() => plot.compute({x: 0, y: 0, width: 3, height: 3}, 3, 1)).toThrow();
+  expect(() => plot.compute(VIEWPORT_4X4, 0, 1)).toThrow();
+  expect(() => plot.compute(VIEWPORT_4X4, -1, 1)).toThrow();
 });
 
 test('invalid pixel size', () => {
   const plot = new Plot(() => 0);
   expect(() => plot.compute(VIEWPORT_4X4, 4, 3)).toThrow();
+  expect(() => plot.compute(VIEWPORT_4X4, 4, 0)).toThrow();
+  expect(() => plot.compute(VIEWPORT_4X4, 4, -1)).toThrow();
 });
 
 // █▖··
