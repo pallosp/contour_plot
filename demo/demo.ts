@@ -144,9 +144,25 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const squares = showEdges ? plot.squares() : [];
 
   const startDraw = Date.now();
-  const svgElements = showEdges ?
-      squaresToSvg(squares, addStyles, {edges: true}) :
-      runsToSvg(runs, addStyles);
+  let svgElements: SVGGraphicsElement[];
+  if (showEdges) {
+    svgElements = squaresToSvg(squares, addStyles, {edges: true});
+    vd.setPreTransform(new DOMMatrix());
+  } else {
+    svgElements = runsToSvg(runs, (el, value) => {
+      addStyles(el, value);
+      el.removeAttribute('transform');
+    });
+    vd.setPreTransform({
+      a: plot.pixelSize(),
+      b: 0,
+      c: 0,
+      d: plot.pixelSize(),
+      e: plot.domain().x,
+      f: plot.domain().y
+    });
+  }
+
   const chart = document.getElementById('chart')!;
   chart.textContent = '';
   chart.append(...svgElements);

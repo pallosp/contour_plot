@@ -1,5 +1,22 @@
 import {Rect} from '../src/rect';
 
+/**
+ * A 2D affine transformation matrix compatible with SVGMatrix and DOMMatrix,
+ * with the notable difference of supporting 64-bit coefficients.
+ *
+ * [a c e]
+ * [b d f]
+ * [0 0 1]
+ */
+export interface TransformationMatrix {
+  readonly a: number;
+  readonly b: number;
+  readonly c: number;
+  readonly d: number;
+  readonly e: number;
+  readonly f: number;
+}
+
 export class ViewportDragger extends EventTarget {
   private dragging = false;
   private lastX = 0;
@@ -8,6 +25,7 @@ export class ViewportDragger extends EventTarget {
   private translateY = 0;
   private width: number;
   private height: number;
+  private preTransform: TransformationMatrix = new DOMMatrix();
   private debounceFrames = 0;
   private overlay = createOverlay();
 
@@ -84,10 +102,13 @@ export class ViewportDragger extends EventTarget {
   }
 
   private update() {
-    this.transformEl.setAttribute(
-        'transform',
-        `scale(${this.zoom}) translate(${this.translateX / this.zoom}, ${
-            this.translateY / this.zoom})`);
+    const {a, b, c, d, e, f} = this.preTransform;
+    const z = this.zoom;
+    const transform = new DOMMatrix([
+      a * z, b * z, c * z, d * z, e * z + this.translateX,
+      f * z + this.translateY
+    ]);
+    this.transformEl.setAttribute('transform', transform.toString());
   }
 
   private dispatchChange() {
@@ -112,8 +133,14 @@ export class ViewportDragger extends EventTarget {
     };
   }
 
+  public setPreTransform(preTransform: TransformationMatrix) {
+    this.preTransform = preTransform;
+    this.update();
+  }
+
   public reset(zoom: number) {
     this.zoom = zoom;
+    this.preTransform = new DOMMatrix();
     this.translateX = this.width / 2;
     this.translateY = this.height / 2;
     this.update();
