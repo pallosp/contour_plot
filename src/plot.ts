@@ -22,6 +22,11 @@ interface State<T> {
   /** Maximum density of the points to evaluate */
   readonly pixelSize: number;
   /**
+   * Constant coefficient of the linear function that maps valid (x, y) points
+   * in the domain to distinct integers
+   */
+  readonly c0: number;
+  /**
    * x-coefficient of the linear function that maps valid (x, y) points in the
    * domain to distinct integers
    */
@@ -168,7 +173,7 @@ export class Plot<T> {
    * plotted function's value is considered constant.
    */
   public runs(): Array<Run<T>> {
-    const {cx, cy, domain, nodes, pixelSize} = this.state;
+    const {c0, cx, cy, domain, nodes, pixelSize} = this.state;
 
     const xMin = domain.x;
     const yMin = domain.y;
@@ -190,17 +195,17 @@ export class Plot<T> {
       while (lastRun.x1 < xMax) {
         const rightX = lastNode.x + lastNode.size;
         const rightY = lastNode.y;
-        let node = nodes.get(cx * rightX + cy * rightY);
+        let node = nodes.get(c0 + cy * rightY + cx * rightX);
         if (!node) {
           const parentSize = lastNode.size * 2;
           const parentX = rightX + parentSize / 4;
           const parentY = (Math.floor(rightY / parentSize) + 0.5) * parentSize;
-          node = nodes.get(cx * parentX + cy * parentY)!;
+          node = nodes.get(c0 + cy * parentY + cx * parentX)!;
         } else if (!node.leaf) {
           const offset = lastNode.size / 4;
           const childX = rightX - offset;
           const childY = y > rightY ? rightY + offset : rightY - offset;
-          node = nodes.get(cx * childX + cy * childY)!;
+          node = nodes.get(c0 + cy * childY + cx * childX)!;
         }
 
         if (node.value === lastNode.value) {
@@ -227,7 +232,7 @@ export class Plot<T> {
    * to the traversal queue.
    */
   private computeGrid(state: State<T>, prevState: State<T>) {
-    const {nodes, domain, sampleSpacing, cx, cy} = state;
+    const {nodes, domain, sampleSpacing, c0, cx, cy} = state;
     const {func, queue} = this;
 
     const xStart = domain.x + sampleSpacing / 2;
@@ -236,6 +241,7 @@ export class Plot<T> {
     const yStop = yStart + domain.height;
 
     const prevNodes = prevState.nodes.size > 0 ? prevState.nodes : undefined;
+    const prevC0 = prevState.c0;
     const prevCx = prevState.cx;
     const prevCy = prevState.cy;
 
@@ -243,8 +249,8 @@ export class Plot<T> {
 
     for (let y = yStart; y < yStop; y += sampleSpacing) {
       for (let x = xStart; x < xStop; x += sampleSpacing) {
-        const key = cx * x + cy * y;
-        let node = prevNodes?.get(prevCx * x + prevCy * y);
+        const key = c0 + cy * y + cx * x;
+        let node = prevNodes?.get(prevC0 + prevCy * y + prevCx * x);
         if (node === undefined) {
           node = {x, y, size: sampleSpacing, value: func(x, y), leaf: true};
           queue.push(node);
@@ -259,12 +265,12 @@ export class Plot<T> {
 
   private addChildren(x: number, y: number, size: number) {
     const func = this.func;
-    const {cx, cy, nodes} = this.state;
+    const {c0, cx, cy, nodes} = this.state;
     x -= size / 4;
     y -= size / 4;
     size /= 2;
 
-    let key = cx * x + cy * y;
+    let key = c0 + cy * y + cx * x;
     const leaf1 = {x, y, size, value: func(x, y), leaf: true};
     nodes.set(key, leaf1);
 
@@ -293,15 +299,15 @@ export class Plot<T> {
    */
   private subdivideLeaf(node: Node<T>) {
     const {x, y, size} = node;
-    const state = this.state;
+    const {nodes, c0, cx, cy} = this.state;
     node.leaf = false;
 
     const parentSize = size * 2;
     const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
     const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
-    const parentKey = state.cx * parentX + state.cy * parentY;
-    const xNeighbor = state.nodes.get(parentKey + 4 * (x - parentX) * state.cx);
-    const yNeighbor = state.nodes.get(parentKey + 4 * (y - parentY) * state.cy);
+    const parentKey = c0 + cy * parentY + cx * parentX;
+    const xNeighbor = nodes.get(parentKey + 4 * (x - parentX) * cx);
+    const yNeighbor = nodes.get(parentKey + 4 * (y - parentY) * cy);
 
     if (xNeighbor?.leaf) this.subdivideLeaf(xNeighbor);
     if (yNeighbor?.leaf) this.subdivideLeaf(yNeighbor);
@@ -315,7 +321,7 @@ export class Plot<T> {
    */
   private traverse() {
     const queue = this.queue;
-    const {cx, cy, nodes, pixelSize} = this.state;
+    const {c0, cx, cy, nodes, pixelSize} = this.state;
     let node: Node<T>|undefined;
     while ((node = queue.pop())) {
       if (!node.leaf) continue;
@@ -324,8 +330,8 @@ export class Plot<T> {
       const parentSize = size * 2;
       const parentX = (Math.floor(x / parentSize) + 0.5) * parentSize;
       const parentY = (Math.floor(y / parentSize) + 0.5) * parentSize;
-      const key = cx * x + cy * y;
-      const parentKey = parentX * cx + parentY * cy;
+      const key = c0 + cy * y + cx * x;
+      const parentKey = c0 + parentY * cy + parentX * cx;
 
       if (size === pixelSize) {
         // x/y neighbors with 2px size
@@ -380,8 +386,8 @@ export class Plot<T> {
     }
     const {x, y, size} = node;
     const childRadius = size / 4;
-    const {cx, cy, nodes} = this.state;
-    const key = cx * x + cy * y;
+    const {c0, cx, cy, nodes} = this.state;
+    const key = c0 + cy * y + cx * x;
     const child1 = nodes.get(key + childRadius * (cx + cy))!;
     const child2 = nodes.get(key + childRadius * (cx - cy))!;
     const child3 = nodes.get(key - childRadius * (cx + cy))!;
@@ -405,7 +411,7 @@ export class Plot<T> {
     let node: Node<T>|undefined;
     const state = this.state;
     let size = state.pixelSize;
-    while (!(node = state.nodes.get(state.cx * x + state.cy * y)) &&
+    while (!(node = state.nodes.get(state.c0 + state.cy * y + state.cx * x)) &&
            size < state.sampleSpacing) {
       size *= 2;
       x = (Math.floor(x / size) + 0.5) * size;
@@ -428,14 +434,12 @@ function createState<T>(
   const nodes = new Map<number, Node<T>>();
   const cx = 2 / pixelSize;
   const cy = domain.width / pixelSize * cx;
+  const c0 = -cx * domain.x - cy * domain.y;
 
   // Prevent key collisions due to rounding at extreme zoom levels.
-  const minKey = cx * domain.x + cy * domain.y;
-  const maxKey = minKey + cx * domain.width + cy * domain.height;
-  assert(Math.abs(minKey) < Number.MAX_SAFE_INTEGER);
-  assert(Math.abs(maxKey) < Number.MAX_SAFE_INTEGER);
+  assert(Math.abs(c0) <= Number.MAX_SAFE_INTEGER / 2);
 
-  return {nodes, domain, sampleSpacing, pixelSize, cx, cy};
+  return {nodes, domain, sampleSpacing, pixelSize, c0, cx, cy};
 }
 
 /**
@@ -458,7 +462,7 @@ function haveSameBoundaries(
  */
 function copyNodesFiltered<T>(
     source: State<T>, target: State<T>, queue: Array<Node<T>>) {
-  const {nodes, domain, sampleSpacing, cx, cy} = target;
+  const {nodes, domain, sampleSpacing, c0, cx, cy} = target;
 
   const x0 = domain.x;
   const y0 = domain.y;
@@ -508,7 +512,7 @@ function copyNodesFiltered<T>(
       if (y > sy1 - sampleSpacing + size / 2) node.leaf = true;
     }
 
-    nodes.set(x * cx + y * cy, node);
+    nodes.set(c0 + y * cy + x * cx, node);
     if (enqueue) queue.push(node);
   }
 }
