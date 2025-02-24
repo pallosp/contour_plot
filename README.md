@@ -7,6 +7,8 @@
 
 ## Example usage
 
+### SVG output
+
 The following TypeScript code snippet will create an SVG and draw a filled hyperbola:
 
 ```typescript
@@ -35,7 +37,39 @@ plot.append(...runsToSvg(
     }));
 ```
 
-[Demo on CodePen](https://codepen.io/Peter-Pallos/pen/wBvWRBJ)
+[Demo on CodePen](https://codepen.io/Peter-Pallos/full/wBvWRBJ)
+
+### Text output
+
+The library can also visualize boolean-valued functions using Unicode block drawing character, exposing the plot's underlying structure:
+
+```typescript
+import {Plot, squaresToText} from 'contour-plot-svg';
+
+const domain = {x: -8, y: -8, width: 16, height: 8};
+const plot = new Plot((x, y) => x * x + y * y < 45)
+    .compute(domain, /* sampleSpacing= */ 4, /* pixelSize= */ 1);
+
+const pre = document.createElement('pre');
+pre.style.lineHeight = '1';
+pre.textContent = squaresToText(plot.squares());
+document.body.append(pre);
+```
+
+Result
+
+```
+┌─┐ ┌─┐ ┌─┐ □ □ □ □ ┌─┐ ┌─┐ ┌─┐ 
+└─┘ └─┘ └─┘ ■ ■ ■ ■ └─┘ └─┘ └─┘ 
+┌─┐ □ □ ▗▄▖ ▗▄▖ ▗▄▖ ▗▄▖ □ □ ┌─┐ 
+└─┘ □ ■ ▝▀▘ ▝▀▘ ▝▀▘ ▝▀▘ ■ □ └─┘ 
+┌─┐ ▗▄▖ ▗▄▄▄▄▄▖ ▗▄▄▄▄▄▖ ▗▄▖ ┌─┐ 
+└─┘ ▝▀▘ ▐█████▌ ▐█████▌ ▝▀▘ └─┘ 
+□ ■ ▗▄▖ ▐█████▌ ▐█████▌ ▗▄▖ ■ □ 
+□ ■ ▝▀▘ ▝▀▀▀▀▀▘ ▝▀▀▀▀▀▘ ▝▀▘ ■ □ 
+```
+
+[Demo on CodePen](https://codepen.io/Peter-Pallos/full/vEYKvag)
 
 ## Interactive demo
 
