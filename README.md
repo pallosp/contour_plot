@@ -35,9 +35,11 @@ plot.append(...runsToSvg(
     }));
 ```
 
-## Demo
+[Demo on CodePen](https://codepen.io/Peter-Pallos/pen/wBvWRBJ)
 
-To start a demo run the following commands then open http://localhost:4173.
+## Interactive demo
+
+To start a demo showcasing all features, run the following commands then open http://localhost:4173.
 There you can select a function to plot, specify the resolution, and optionally highlight the edges of the building blocks.
 
 ```sh
