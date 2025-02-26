@@ -7,7 +7,10 @@
   "author": {
     "name": "Péter Pallos"
   },
-  "repository": "github:pallosp/contour_plot",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pallosp/contour_plot.git"
+  },
   "license": "MIT",
   "module": "./dist/npm/index.js",
   "types": "./dist/npm/index.d.ts",
