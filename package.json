@@ -2,7 +2,7 @@
   "name": "contour-plot-svg",
   "description": "Library to evaluate and visualize functions that map Euclidean points to discrete values.",
   "sideEffects": false,
-  "version": "2.0.1",
+  "version": "2.0.2",
   "type": "module",
   "author": {
     "name": "Péter Pallos"
@@ -30,6 +30,7 @@
     "build": "tsc && vite build && tsup",
     "coverage": "jest --coverage",
     "lint": "eslint",
+    "prepublishOnly": ".husky/pre-commit && tsup",
     "preview": "vite preview",
     "test": "jest",
     "prepare": "husky"
