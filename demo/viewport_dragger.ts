@@ -1,4 +1,4 @@
-import {Rect} from '../src/rect';
+import {Rect} from '../src';
 
 /**
  * A 2D affine transformation matrix compatible with SVGMatrix and DOMMatrix,
