@@ -2,7 +2,7 @@
   "name": "contour-plot-svg",
   "description": "Library to evaluate and visualize functions that map Euclidean points to discrete values.",
   "sideEffects": false,
-  "version": "2.0.3",
+  "version": "2.0.4",
   "type": "module",
   "author": {
     "name": "Péter Pallos"
@@ -12,6 +12,7 @@
     "url": "git+https://github.com/pallosp/contour_plot.git"
   },
   "license": "MIT",
+  "main": "./dist/npm/index.js",
   "module": "./dist/npm/index.js",
   "types": "./dist/npm/index.d.ts",
   "files": [
