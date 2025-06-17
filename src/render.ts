@@ -23,6 +23,7 @@ interface Point {
 export function squaresToSvg<T>(
     squares: Array<Square<T>>, addStyles: AddStylesCallback<T>,
     options?: {edges?: boolean}): SVGGraphicsElement[] {
+  if (squares.length === 0) return [];
   const squareMap = new Map<T, Map<number, Array<Square<T>>>>();
   for (const square of squares) {
     let squaresBySize = squareMap.get(square.value);
@@ -38,25 +39,26 @@ export function squaresToSvg<T>(
     }
   }
 
-  const pathElements: SVGPathElement[] = [];
+  const root = document.createElementNS(SVG_NAMESPACE, 'g');
+  if (options?.edges) {
+    root.setAttribute('stroke-width', '.9')
+  } else {
+    root.setAttribute('shape-rendering', 'crispEdges');
+  }
+  root.setAttribute('stroke-linecap', 'square');
+
   for (const squaresBySize of squareMap.values()) {
     for (const group of squaresBySize.values()) {
       const path = document.createElementNS(SVG_NAMESPACE, 'path');
       path.setAttribute('d', sameSizeSquaresToPathDef(group));
-      if (options?.edges) {
-        path.setAttribute('stroke-width', '.9')
-      } else {
-        path.setAttribute('shape-rendering', 'crispEdges');
-      }
-      path.setAttribute('stroke-linecap', 'square');
       if (group[0].size !== 1) {
         path.setAttribute('transform', `scale(${group[0].size})`);
       }
       addStyles(path, group[0].value);
-      pathElements.push(path);
+      root.append(path);
     }
   }
-  return pathElements;
+  return [root];
 }
 
 function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
@@ -109,11 +111,13 @@ export function runsToSvg<T>(
       runsByValue.set(run.value, [run]);
     }
   }
-  const svgElements: SVGGraphicsElement[] = [];
+
+  const root = document.createElementNS(SVG_NAMESPACE, 'g');
+  root.setAttribute('shape-rendering', 'crispEdges');
+  root.setAttribute('stroke-width', '1');
+
   for (const runs of runsByValue.values()) {
     const g = document.createElementNS(SVG_NAMESPACE, 'g');
-    g.setAttribute('shape-rendering', 'crispEdges');
-    g.setAttribute('stroke-width', '1');
     g.setAttribute(
         'transform',
         `translate(${origin.x} ${origin.y})${
@@ -124,9 +128,9 @@ export function runsToSvg<T>(
       path.setAttribute('d', d);
       g.append(path);
     }
-    svgElements.push(g);
+    root.append(g);
   }
-  return svgElements;
+  return [root];
 }
 
 /** Returns the greatest 2ⁿ (n ∈ ℤ) for which x / 2ⁿ is an integer. */
