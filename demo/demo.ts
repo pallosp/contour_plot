@@ -144,24 +144,13 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const squares = showEdges ? plot.squares() : [];
 
   const startDraw = Date.now();
-  let svgElements: SVGGraphicsElement[];
-  if (showEdges) {
-    svgElements = squaresToSvg(squares, addStyles, {edges: true});
-    vd.setPreTransform(new DOMMatrix());
-  } else {
-    svgElements = runsToSvg(runs, (el, value) => {
-      addStyles(el, value);
-    });
-    svgElements[0].removeAttribute('transform');
-    vd.setPreTransform({
-      a: plot.pixelSize(),
-      b: 0,
-      c: 0,
-      d: plot.pixelSize(),
-      e: plot.domain().x,
-      f: plot.domain().y
-    });
-  }
+  const domainToView = new DOMMatrix()
+                           .scale(1 / plot.pixelSize())
+                           .translate(-plot.domain().x, -plot.domain().y);
+  const svgElements = showEdges ?
+      squaresToSvg(squares, addStyles, {transform: domainToView, edges: true}) :
+      runsToSvg(runs, addStyles, {transform: domainToView});
+  vd.setPreTransform(domainToView.inverse());
 
   const chart = document.getElementById('chart')!;
   chart.textContent = '';
