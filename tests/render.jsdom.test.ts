@@ -14,7 +14,7 @@ test('runsToSvg, y=0', () => {
 
 test('runsToSvg, x>0', () => {
   const root = runsToSvg([{x0: 3, x1: 5, y: 1.5, value: 1}], () => {})[0];
-  expect(root.getAttribute('transform')).toBe('translate(3 1)');
+  expect(root.getAttribute('transform')).toBe('matrix(1 0 0 1 3 1)');
   const paths = root.children;
   expect(paths.length).toBe(1);
   expect(paths[0].children.length).toBe(1);
@@ -23,7 +23,7 @@ test('runsToSvg, x>0', () => {
 
 test('runsToSvg, zoomed in', () => {
   const root = runsToSvg([{x0: 2, x1: 8, y: 1, value: 1}], () => {})[0];
-  expect(root.getAttribute('transform')).toBe('translate(2 0) scale(2)');
+  expect(root.getAttribute('transform')).toBe('matrix(2 0 0 2 2 0)');
   const paths = root.children;
   expect(paths.length).toBe(1);
   expect(paths[0].children.length).toBe(1);
@@ -32,7 +32,7 @@ test('runsToSvg, zoomed in', () => {
 
 test('runsToSvg, zoomed out', () => {
   const root = runsToSvg([{x0: 2, x1: 8, y: 0.25, value: 1}], () => {})[0];
-  expect(root.getAttribute('transform')).toBe('translate(2 0) scale(0.5)');
+  expect(root.getAttribute('transform')).toBe('matrix(0.5 0 0 0.5 2 0)');
   const paths = root.children;
   expect(paths.length).toBe(1);
   expect(paths[0].children.length).toBe(1);
@@ -66,6 +66,20 @@ test('runsToSvg, zigzag optimization', () => {
   expect(paths.length).toBe(1);
   expect(paths[0].children.length).toBe(1);
   expect(paths[0].children[0].getAttribute('d')).toBe('m0 0.5h2m0 1h-2m0 1h2');
+});
+
+test('runsToSvg, translated', () => {
+  const transform = {a: 1, b: 0, c: 0, d: 1, e: 20, f: 10};
+  const root =
+      runsToSvg([{x0: 2, x1: 3, y: 1.5, value: 1}], () => {}, {transform})[0];
+  expect(root.getAttribute('transform')).toBe('matrix(1 0 0 1 22 11)');
+});
+
+test('runsToSvg, translated and scaled', () => {
+  const transform = {a: 2, b: 0, c: 0, d: 2, e: 20, f: 10};
+  const root =
+      runsToSvg([{x0: 2, x1: 3, y: 1.5, value: 1}], () => {}, {transform})[0];
+  expect(root.getAttribute('transform')).toBe('matrix(2 0 0 2 24 12)');
 });
 
 test('squaresToSvg, empty', () => {

@@ -1,7 +1,7 @@
 import assert from 'minimalistic-assert';
 
 import {Rect} from './rect';
-import {Run, Square} from './types';
+import {AffineTransform, Run, Square} from './types';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
@@ -89,6 +89,11 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
 /**
  * Renders a list of "runs" as SVG <path> elements.
  *
+ * Optionally applies a domain to view transformation to the result. This
+ * transformation is semantically equivalent with wrapping the returned svg into
+ * <g transform="..."></g>, but has less floating point rounding error due to
+ * using 64-bit floats under the hood.
+ *
  * Generates separate paths for distinct function values and segments them into
  * 64-pixel-tall horizontal stripes. This segmentation improves performance by
  * preventing overly complex paths that could slow down mouse interactions like
@@ -96,12 +101,11 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
  * addStyles callback.
  */
 export function runsToSvg<T>(
-    runs: Array<Run<T>>,
-    addStyles: AddStylesCallback<T>): SVGGraphicsElement[] {
+    runs: Array<Run<T>>, addStyles: AddStylesCallback<T>,
+    options?: {transform?: AffineTransform}): SVGGraphicsElement[] {
   if (runs.length === 0) return [];
-  const halfHeight = greatestPow2Divisor(runs[0].y);
-  const origin = {x: runs[0].x0, y: runs[0].y - halfHeight};
-  const scale = halfHeight * 2;
+  const runHeight = greatestPow2Divisor(runs[0].y) * 2;
+  const origin = {x: runs[0].x0, y: runs[0].y - runHeight / 2};
   const runsByValue = new Map<T, Array<Run<T>>>();
   for (const run of runs) {
     const sameValueRuns = runsByValue.get(run.value);
@@ -112,18 +116,28 @@ export function runsToSvg<T>(
     }
   }
 
+  // The effective transformation is the combination of
+  //  1. scale(runHeight)
+  //  2. translate(origin.x, origin.y)
+  //  3. options.transform
+  let {a, b, c, d, e, f} =
+      options?.transform ?? {a: 1, b: 0, c: 0, d: 1, e: 0, f: 0};
+  e += a * origin.x + c * origin.y;
+  f += b * origin.x + d * origin.y;
+  a *= runHeight;
+  b *= runHeight;
+  c *= runHeight;
+  d *= runHeight;
+
   const root = document.createElementNS(SVG_NAMESPACE, 'g');
   root.setAttribute('shape-rendering', 'crispEdges');
   root.setAttribute('stroke-width', '1');
-  root.setAttribute(
-      'transform',
-      `translate(${origin.x} ${origin.y})${
-          scale !== 1 ? ` scale(${scale})` : ''}`);
+  root.setAttribute('transform', `matrix(${a} ${b} ${c} ${d} ${e} ${f})`);
 
   for (const runs of runsByValue.values()) {
     const g = document.createElementNS(SVG_NAMESPACE, 'g');
     addStyles(g, runs[0].value);
-    for (const d of runsToPathDefs(runs, origin, 1 / scale)) {
+    for (const d of runsToPathDefs(runs, origin, 1 / runHeight)) {
       const path = document.createElementNS(SVG_NAMESPACE, 'path');
       path.setAttribute('d', d);
       g.append(path);

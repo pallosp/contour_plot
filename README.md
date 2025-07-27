@@ -14,27 +14,24 @@ The following TypeScript code snippet will create an SVG and draw a filled hyper
 ```typescript
 import {Plot, runsToSvg} from 'contour-plot-svg';
 
-document.body.innerHTML = `
-    <svg style="width: 100%; height: calc(100vh - 20px)">
-      <g id="plot" />
-    </svg>`;
+document.body.innerHTML =
+    '<svg style="width: 100%; height: calc(100vh - 20px)" />';
 const svg = document.querySelector('svg')!;
-const plot = svg.querySelector('#plot') as SVGElement;
 
 const hyperbola = (x: number, y: number) => x * y > 10000;
 
-const width = svg.clientWidth;
-const height = svg.clientHeight;
+const [width, height] = [svg.clientWidth, svg.clientHeight];
 const domain = {x: -width / 2, y: -height / 2, width, height};
-plot.style.transform = `translate(${-domain.x}px, ${-domain.y}px)`;
+const domainToViewTransform =
+    new DOMMatrix().translate(width / 2, height / 2).flipY();
 
-plot.append(...runsToSvg(
+svg.append(...runsToSvg(
     new Plot<boolean>(hyperbola)
         .compute(domain, /* sampleSpacing= */ 128, /* pixelSize= */ 1)
         .runs(),
     /* addStyles= */ (el, isInside) => {
       el.style.stroke = isInside ? 'olive' : 'lightgreen';
-    }));
+    }, {transform: domainToViewTransform}));
 ```
 
 [Demo on CodePen](https://codepen.io/Peter-Pallos/full/wBvWRBJ)
