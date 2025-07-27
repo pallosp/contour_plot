@@ -151,8 +151,8 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   } else {
     svgElements = runsToSvg(runs, (el, value) => {
       addStyles(el, value);
-      el.removeAttribute('transform');
     });
+    svgElements[0].removeAttribute('transform');
     vd.setPreTransform({
       a: plot.pixelSize(),
       b: 0,

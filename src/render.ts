@@ -115,13 +115,13 @@ export function runsToSvg<T>(
   const root = document.createElementNS(SVG_NAMESPACE, 'g');
   root.setAttribute('shape-rendering', 'crispEdges');
   root.setAttribute('stroke-width', '1');
+  root.setAttribute(
+      'transform',
+      `translate(${origin.x} ${origin.y})${
+          scale !== 1 ? ` scale(${scale})` : ''}`);
 
   for (const runs of runsByValue.values()) {
     const g = document.createElementNS(SVG_NAMESPACE, 'g');
-    g.setAttribute(
-        'transform',
-        `translate(${origin.x} ${origin.y})${
-            scale !== 1 ? ` scale(${scale})` : ''}`);
     addStyles(g, runs[0].value);
     for (const d of runsToPathDefs(runs, origin, 1 / scale)) {
       const path = document.createElementNS(SVG_NAMESPACE, 'path');

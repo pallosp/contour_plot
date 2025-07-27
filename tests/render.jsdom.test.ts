@@ -14,27 +14,27 @@ test('runsToSvg, y=0', () => {
 
 test('runsToSvg, x>0', () => {
   const root = runsToSvg([{x0: 3, x1: 5, y: 1.5, value: 1}], () => {})[0];
+  expect(root.getAttribute('transform')).toBe('translate(3 1)');
   const paths = root.children;
   expect(paths.length).toBe(1);
-  expect(paths[0].getAttribute('transform')).toBe('translate(3 1)');
   expect(paths[0].children.length).toBe(1);
   expect(paths[0].children[0].getAttribute('d')).toBe('m0 0.5h2');
 });
 
 test('runsToSvg, zoomed in', () => {
   const root = runsToSvg([{x0: 2, x1: 8, y: 1, value: 1}], () => {})[0];
+  expect(root.getAttribute('transform')).toBe('translate(2 0) scale(2)');
   const paths = root.children;
   expect(paths.length).toBe(1);
-  expect(paths[0].getAttribute('transform')).toBe('translate(2 0) scale(2)');
   expect(paths[0].children.length).toBe(1);
   expect(paths[0].children[0].getAttribute('d')).toBe('m0 0.5h3');
 });
 
 test('runsToSvg, zoomed out', () => {
   const root = runsToSvg([{x0: 2, x1: 8, y: 0.25, value: 1}], () => {})[0];
+  expect(root.getAttribute('transform')).toBe('translate(2 0) scale(0.5)');
   const paths = root.children;
   expect(paths.length).toBe(1);
-  expect(paths[0].getAttribute('transform')).toBe('translate(2 0) scale(0.5)');
   expect(paths[0].children.length).toBe(1);
   expect(paths[0].children[0].getAttribute('d')).toBe('m0 0.5h12');
 });
