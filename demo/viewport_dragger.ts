@@ -1,21 +1,5 @@
 import {Rect} from '../src';
-
-/**
- * A 2D affine transformation matrix compatible with SVGMatrix and DOMMatrix,
- * with the notable difference of supporting 64-bit coefficients.
- *
- * [a c e]
- * [b d f]
- * [0 0 1]
- */
-export interface TransformationMatrix {
-  readonly a: number;
-  readonly b: number;
-  readonly c: number;
-  readonly d: number;
-  readonly e: number;
-  readonly f: number;
-}
+import {AffineTransform} from '../src/types';
 
 export class ViewportDragger extends EventTarget {
   private dragging = false;
@@ -25,7 +9,7 @@ export class ViewportDragger extends EventTarget {
   private translateY = 0;
   private width: number;
   private height: number;
-  private preTransform: TransformationMatrix = new DOMMatrix();
+  private preTransform: AffineTransform = new DOMMatrix();
   private debounceFrames = 0;
   private overlay = createOverlay();
 
@@ -133,7 +117,7 @@ export class ViewportDragger extends EventTarget {
     };
   }
 
-  public setPreTransform(preTransform: TransformationMatrix) {
+  public setPreTransform(preTransform: AffineTransform) {
     this.preTransform = preTransform;
     this.update();
   }

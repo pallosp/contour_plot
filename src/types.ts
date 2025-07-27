@@ -27,3 +27,20 @@ export interface Run<T> {
   /** value of the plotted function over the run */
   readonly value: T;
 }
+
+/**
+ * A 2D affine transformation matrix compatible with SVGMatrix and DOMMatrix,
+ * with the notable difference of supporting 64-bit coefficients.
+ *
+ * [a c e]
+ * [b d f]
+ * [0 0 1]
+ */
+export interface AffineTransform {
+  readonly a: number;
+  readonly b: number;
+  readonly c: number;
+  readonly d: number;
+  readonly e: number;
+  readonly f: number;
+}
