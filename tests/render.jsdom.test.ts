@@ -176,3 +176,10 @@ test('squaresToSvg, showing edges', () => {
   expect(paths.length).toBe(1);
   expect(paths[0].getAttribute('d')).toBe('m0.5 0.5h0');
 });
+
+test('squaresToSvg, with domain to view transformation', () => {
+  const root = squaresToSvg(
+      [{x: 1, y: 1, size: 2, value: 0}], () => {},
+      {transform: {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6}})[0];
+  expect(root.getAttribute('transform')).toBe('matrix(1 2 3 4 5 6)');
+});

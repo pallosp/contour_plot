@@ -15,14 +15,16 @@ interface Point {
 /**
  * Renders a list of squares represented by their centers, sizes and associated
  * values as SVG <path> elements. The caller can assign CSS classes or styles
- * such as stroke color with the addStyles callback.
+ * such as stroke color with the addStyles callback. Optionally applies a domain
+ * to view transformation to the result.
  *
  * To reduce the output size and the drawing time, this function will render the
  * squares with the same size and value as a single SVG path.
  */
 export function squaresToSvg<T>(
     squares: Array<Square<T>>, addStyles: AddStylesCallback<T>,
-    options?: {edges?: boolean}): SVGGraphicsElement[] {
+    options?: {edges?: boolean, transform?: AffineTransform}):
+    SVGGraphicsElement[] {
   if (squares.length === 0) return [];
   const squareMap = new Map<T, Map<number, Array<Square<T>>>>();
   for (const square of squares) {
@@ -46,6 +48,10 @@ export function squaresToSvg<T>(
     root.setAttribute('shape-rendering', 'crispEdges');
   }
   root.setAttribute('stroke-linecap', 'square');
+  if (options?.transform) {
+    const {a, b, c, d, e, f} = options.transform;
+    root.setAttribute('transform', `matrix(${a} ${b} ${c} ${d} ${e} ${f})`);
+  }
 
   for (const squaresBySize of squareMap.values()) {
     for (const group of squaresBySize.values()) {
