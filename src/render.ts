@@ -15,8 +15,12 @@ interface Point {
 /**
  * Renders a list of squares represented by their centers, sizes and associated
  * values as SVG <path> elements. The caller can assign CSS classes or styles
- * such as stroke color with the addStyles callback. Optionally applies a domain
- * to view transformation to the result.
+ * such as stroke color with the addStyles callback.
+ *
+ * Optionally applies a domain to view transformation to the result. This
+ * transformation is semantically equivalent with wrapping the returned svg into
+ * <g transform="..."></g>, but has less floating point rounding error due to
+ * using 64-bit floats under the hood.
  *
  * To reduce the output size and the drawing time, this function will render the
  * squares with the same size and value as a single SVG path.
@@ -48,17 +52,34 @@ export function squaresToSvg<T>(
     root.setAttribute('shape-rendering', 'crispEdges');
   }
   root.setAttribute('stroke-linecap', 'square');
+
+  let dx = 0, dy = 0;
   if (options?.transform) {
+    // Transfer the translation part of options.transform to the initial `m`
+    // path command to reduce float32 rounding errors at high zoom levels.
+    //
+    // Offset calculation with sympy:
+    //
+    //   a,b,c,d,e,f,z,x,y = symbols("a,b,c,d,e,f,z,x,y")
+    //   M = Matrix([[a,c,e],[b,d,f],[0,0,1]])
+    //   S = Matrix([[z,0,0],[0,z,0],[0,0,1]])
+    //   T = Matrix([[1,0,x],[0,1,y],[0,0,1]])
+    //   M1 = m.subs({e:0,f:0})
+    //   pprint(simplify(T.inv()*S.inv()*M1.inv()*M*S*T))
+
     const {a, b, c, d, e, f} = options.transform;
-    root.setAttribute('transform', `matrix(${a} ${b} ${c} ${d} ${e} ${f})`);
+    root.setAttribute('transform', `matrix(${a} ${b} ${c} ${d} 0 0)`);
+    dx = (d * e - c * f) / (a * d - b * c);
+    dy = (a * f - b * e) / (a * d - b * c);
   }
 
   for (const squaresBySize of squareMap.values()) {
     for (const group of squaresBySize.values()) {
       const path = document.createElementNS(SVG_NAMESPACE, 'path');
-      path.setAttribute('d', sameSizeSquaresToPathDef(group));
-      if (group[0].size !== 1) {
-        path.setAttribute('transform', `scale(${group[0].size})`);
+      const size = group[0].size;
+      path.setAttribute('d', sameSizeSquaresToPathDef(group, dx, dy));
+      if (size !== 1) {
+        path.setAttribute('transform', `scale(${size})`);
       }
       addStyles(path, group[0].value);
       root.append(path);
@@ -67,7 +88,8 @@ export function squaresToSvg<T>(
   return [root];
 }
 
-function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
+function sameSizeSquaresToPathDef(
+    squares: Array<Square<unknown>>, dx: number, dy: number): string {
   // The algorithm below implements run-length encoding, which yields ~40%
   // shorter output compared to the naive algorithm, i.e.
   // squares.map(s => `M${s.x} ${s.y}h0`).join('')
@@ -75,7 +97,7 @@ function sameSizeSquaresToPathDef(squares: Array<Square<unknown>>): string {
 
   const {x, y, size} = squares[0];
   const scale = 1 / size;
-  const d: string[] = [`m${x * scale} ${y * scale}`];
+  const d: string[] = [`m${(x + dx) * scale} ${(y + dy) * scale}`];
   let last = {x: x - size, y};
   let h = -1;
 

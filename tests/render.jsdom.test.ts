@@ -181,5 +181,11 @@ test('squaresToSvg, with domain to view transformation', () => {
   const root = squaresToSvg(
       [{x: 1, y: 1, size: 2, value: 0}], () => {},
       {transform: {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6}})[0];
-  expect(root.getAttribute('transform')).toBe('matrix(1 2 3 4 5 6)');
+  // Drops the translation part of the transformation matrix.
+  expect(root.getAttribute('transform')).toBe('matrix(1 2 3 4 0 0)');
+  const path = root.children[0];
+  // Transfers the translation to the initial path move command:
+  //   [[1,3,0], [2,4,0], [0,0,1]] * scale(size) * [0, 1.5, 1]ᵀ ==
+  //   [[1,3,5], [2,4,6], [0,0,1]] * [1, 1, 1]ᵀ
+  expect(path.getAttribute('d')).toBe('m0 1.5h0');
 });
