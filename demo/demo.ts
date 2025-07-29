@@ -150,7 +150,7 @@ function plotFunction<T>(plotParams: PlotParams<T>) {
   const svgElements = showEdges ?
       squaresToSvg(squares, addStyles, {transform: domainToView, edges: true}) :
       runsToSvg(runs, addStyles, {transform: domainToView});
-  vd.setPreTransform(domainToView.inverse());
+  vd.setToDomainTransform(domainToView.inverse());
 
   const chart = document.getElementById('chart')!;
   chart.textContent = '';

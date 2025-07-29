@@ -9,7 +9,7 @@ export class ViewportDragger extends EventTarget {
   private translateY = 0;
   private width: number;
   private height: number;
-  private preTransform: AffineTransform = new DOMMatrix();
+  private toDomainTransform: AffineTransform = new DOMMatrix();
   private debounceFrames = 0;
   private overlay = createOverlay();
 
@@ -86,8 +86,9 @@ export class ViewportDragger extends EventTarget {
   }
 
   private update() {
-    const {a, b, c, d, e, f} = this.preTransform;
+    const {a, b, c, d, e, f} = this.toDomainTransform;
     const z = this.zoom;
+    // translate(x,y) * scale(z) * toDomainTransform
     const transform = new DOMMatrix([
       a * z, b * z, c * z, d * z, e * z + this.translateX,
       f * z + this.translateY
@@ -117,14 +118,14 @@ export class ViewportDragger extends EventTarget {
     };
   }
 
-  public setPreTransform(preTransform: AffineTransform) {
-    this.preTransform = preTransform;
+  public setToDomainTransform(toDomainTransform: AffineTransform) {
+    this.toDomainTransform = toDomainTransform;
     this.update();
   }
 
   public reset(zoom: number) {
     this.zoom = zoom;
-    this.preTransform = new DOMMatrix();
+    this.toDomainTransform = new DOMMatrix();
     this.translateX = this.width / 2;
     this.translateY = this.height / 2;
     this.update();
