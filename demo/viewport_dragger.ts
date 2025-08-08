@@ -62,12 +62,8 @@ export class ViewportDragger extends EventTarget {
   private wheel(e: WheelEvent) {
     e.preventDefault();
     const zoomMult = 0.999 ** e.deltaY;
-    this.translateX =
-        Math.round(((this.translateX - e.offsetX) * zoomMult + e.offsetX) * 2) /
-        2;
-    this.translateY =
-        Math.round(((this.translateY - e.offsetY) * zoomMult + e.offsetY) * 2) /
-        2;
+    this.translateX = (this.translateX - e.offsetX) * zoomMult + e.offsetX;
+    this.translateY = (this.translateY - e.offsetY) * zoomMult + e.offsetY;
     this.zoom *= zoomMult;
     this.update();
     this.dispatchChange();
