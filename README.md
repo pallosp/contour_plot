@@ -1,8 +1,9 @@
 # Contour Plot
 
-[![NPM package](https://img.shields.io/npm/v/contour-plot-svg.svg?style=flat)](https://npmjs.org/package/contour-plot-svg "View this project on npm")
+[![NPM package](https://img.shields.io/npm/v/contour-plot-svg)](https://npmjs.org/package/contour-plot-svg "View this project on npm")
 [![Bundle size](https://img.shields.io/bundlephobia/min/contour-plot-svg)](https://bundlephobia.com/package/contour-plot-svg)
-[![MIT license](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+![Downloads](https://img.shields.io/npm/dt/contour-plot-svg)
+[![MIT license](https://img.shields.io/badge/license-MIT-brightgreen)](https://opensource.org/licenses/MIT)
 
 **Contour Plot** is a TypeScript library designed for efficient plotting of
 functions that map (x, y) points to a limited set of discrete values. The
