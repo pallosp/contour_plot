@@ -1,6 +1,7 @@
 # Contour Plot
 
 [![NPM package](https://img.shields.io/npm/v/contour-plot-svg.svg?style=flat)](https://npmjs.org/package/contour-plot-svg "View this project on npm")
+![Bundle size](https://img.shields.io/bundlephobia/min/contour-plot-svg)
 [![MIT license](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 
 **Contour Plot** is a TypeScript library designed for efficient plotting of
